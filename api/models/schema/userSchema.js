@@ -143,6 +143,11 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    file_access_groups: {
+      type: [String],
+      default: [],
+      description: 'Groups that determine file access permissions',
+    },
   },
 
   { timestamps: true },

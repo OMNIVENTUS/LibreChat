@@ -221,3 +221,7 @@ We thank [Locize](https://locize.com) for their translation management tools tha
 </h2>
 <p>
   - you can go on [RAG_API_HOST]:8000/docs to see the docs of the RAG API
+  - add posibility to see file scope in the my files page of librechat
+  - remove possibility to remove files that are not created by the user
+  - change color of shared files
+  - add simple user administration interface for users of type admin

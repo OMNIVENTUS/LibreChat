@@ -14,14 +14,41 @@ const findFileById = async (file_id, options = {}) => {
 };
 
 /**
- * Retrieves files matching a given filter, sorted by the most recently updated.
- * @param {Object} filter - The filter criteria to apply.
- * @param {Object} [_sortOptions] - Optional sort parameters.
- * @returns {Promise<Array<MongoFile>>} A promise that resolves to an array of file documents.
+ * Retrieves files matching a given filter, including scope-based access
+ * @param {Object} filter - The filter criteria to apply
+ * @param {Object} options - Additional options including user context
+ * @returns {Promise<Array<MongoFile>>} Array of accessible files
  */
-const getFiles = async (filter, _sortOptions) => {
-  const sortOptions = { updatedAt: -1, ..._sortOptions };
-  return await File.find(filter).sort(sortOptions).lean();
+const getFiles = async (filter, options = {}) => {
+  const { user } = options;
+
+  // Early return if no user
+  if (!user?.id) {
+    return [];
+  }
+
+  const accessGroups = [
+    ...(user.file_access_groups || []),
+    user.role, // Include the user's role for backward compatibility
+    user.id, // Include user ID for direct shares
+  ].filter(Boolean);
+
+  const scopeFilter = {
+    $or: [
+      { user: user.id }, // User's own files
+      { scope: 'public' }, // Public files
+      {
+        scope: 'shared',
+        access_control: {
+          $in: accessGroups,
+        },
+      },
+    ],
+  };
+
+  const finalFilter = { ...filter, ...scopeFilter };
+  const sortOptions = { updatedAt: -1, ...options.sort };
+  return await File.find(finalFilter).sort(sortOptions).lean();
 };
 
 /**

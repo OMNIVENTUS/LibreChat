@@ -25,7 +25,12 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const files = await getFiles({ user: req.user.id });
+    const files = await getFiles(
+      {}, // No additional filters
+      {
+        user: req.user,
+      },
+    );
     res.status(200).send(files);
   } catch (error) {
     logger.error('[/files] Error getting files:', error);
