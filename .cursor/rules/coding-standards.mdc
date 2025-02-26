@@ -1,0 +1,50 @@
+---
+description: Coding standards and best practices for the project
+globs: **/*.ts, **/*.tsx, **/*.js, **/*.jsx
+---
+# Coding Standards
+
+## General Guidelines
+- Use early returns for better code readability
+- Write descriptive variable and function names
+- Implement proper TypeScript types for all components and functions
+- Ensure code is complete with no TODOs or placeholders
+- Include all necessary imports
+- always add comments in logic related code that you write 
+
+## Function Naming
+- Event handler functions should use the "handle" prefix
+  - Example: `handleClick` for onClick
+  - Example: `handleKeyDown` for onKeyDown
+- Use const arrow functions instead of regular functions
+  - Example: `const myFunction = () => {}`
+
+## React/Next.js Specific
+- Use functional components with TypeScript
+- Implement proper prop types for all components
+- Use hooks according to React best practices
+- Ensure proper component lifecycle management
+
+## Styling Guidelines
+- Use Tailwind classes exclusively for styling
+- Avoid inline CSS or styled-components
+- Use "class:" syntax instead of ternary operators when possible
+  ```tsx
+  // Preferred
+  class:active={isActive}
+  // Instead of
+  className={isActive ? 'active' : ''}
+  ```
+
+## Accessibility
+- Implement proper ARIA attributes
+- Ensure keyboard navigation support
+- Add appropriate tab indices
+- Include descriptive aria-labels
+- Support screen readers
+
+## Error Handling
+- Implement proper error boundaries
+- Use try-catch blocks appropriately
+- Provide meaningful error messages
+- Handle edge cases explicitly
