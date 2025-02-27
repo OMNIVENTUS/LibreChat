@@ -17,6 +17,8 @@ const contextMap: Record<any, TranslationKeys> = {
   [FileContext.image_generation]: 'com_ui_image_gen',
   [FileContext.assistants_output]: 'com_ui_assistants_output',
   [FileContext.message_attachment]: 'com_ui_attachment',
+  [FileContext.preload]: 'com_files_preload',
+  [FileContext.shared]: 'com_files_shared',
 };
 
 export const columns: ColumnDef<TFile>[] = [

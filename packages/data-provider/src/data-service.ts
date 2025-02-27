@@ -804,3 +804,15 @@ export function verifyTwoFactorTemp(
 ): Promise<t.TVerify2FATempResponse> {
   return request.post(endpoints.verifyTwoFactorTemp(), payload);
 }
+
+export const getUsers = async (): Promise<t.TUser[]> => {
+  return request.get(endpoints.users());
+};
+
+export const updateUser = async (userId: string, data: Partial<t.TUser>): Promise<t.TUser> => {
+  return request.put(endpoints.updateUser(userId), data);
+};
+
+export const deleteUserById = async (userId: string): Promise<void> => {
+  return request.delete(endpoints.deleteUserById(userId));
+};

@@ -219,9 +219,24 @@ We thank [Locize](https://locize.com) for their translation management tools tha
 <h2>
   OMNIVENTUS CHANGES
 </h2>
+
+to see live changes on the front go to http://localhost:3090/
+
 <p>
   - you can go on [RAG_API_HOST]:8000/docs to see the docs of the RAG API
   - add posibility to see file scope in the my files page of librechat
   - remove possibility to remove files that are not created by the user
   - change color of shared files
   - add simple user administration interface for users of type admin
+  - add for admin, an interface to add shared files to the file library
+
+let's implement in the sidePanel Nav a new button to access a simple user administration page.
+
+the page should be on the endpoind /d/users/\* with a children route on /d/users/:userId. that route configuration should be in the dashboardRoutes.
+
+add a new PermissionTypes (USER_ADMIN) and a new Permission 'DELETE'
+update the useSideNavLinks hook to add a two const to check user access to USER_ADMIN and the ability to Delete user. if user has access to USER_ADMIN push a links with a localized title 'User admin'.
+
+the user admin button should copy on the FilesPanel design, with a panelTable a little like the one for Files.
+
+you will then create a data-provider for users in client/src/data-provider/Users following the same file conventions as the over data providers.

@@ -46,6 +46,7 @@ export enum QueryKeys {
   health = 'health',
   userTerms = 'userTerms',
   banner = 'banner',
+  users = 'users',
 }
 
 export enum MutationKeys {
@@ -69,4 +70,7 @@ export enum MutationKeys {
   updateRole = 'updateRole',
   enableTwoFactor = 'enableTwoFactor',
   verifyTwoFactor = 'verifyTwoFactor',
+  userUpdate = 'userUpdate',
+  getUsers = 'getUsers',
+  deleteUserById = 'deleteUserById',
 }

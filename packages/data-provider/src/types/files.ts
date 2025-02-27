@@ -28,6 +28,8 @@ export enum FileContext {
   filterSource = 'filterSource',
   context = 'context',
   bytes = 'bytes',
+  preload = 'preload',
+  shared = 'shared',
 }
 
 export type EndpointFileConfig = {
@@ -72,6 +74,8 @@ export type TFile = {
   metadata?: { fileIdentifier?: string };
   createdAt?: string | Date;
   updatedAt?: string | Date;
+  scope?: 'shared' | 'public' | 'private';
+  access_control?: string[];
 };
 
 export type TFileUpload = TFile & {

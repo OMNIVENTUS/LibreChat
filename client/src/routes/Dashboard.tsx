@@ -6,7 +6,11 @@ import {
   EmptyPromptPreview,
 } from '~/components/Prompts';
 import DashboardRoute from './Layouts/Dashboard';
+import { UsersView , UsersPanel } from '~/components/Users';
 
+// import { UserDetails } from '~/components/Users';
+
+//todo add a route for the admin panel 'admin/users
 const dashboardRoutes = {
   path: 'd/*',
   element: <DashboardRoute />,
@@ -70,6 +74,20 @@ const dashboardRoutes = {
           path: ':promptId',
           element: <PromptForm />,
         },
+      ],
+    },
+    {
+      path: 'users/*',
+      element: <UsersView />,
+      children: [
+        {
+          index: true,
+          element: <UsersPanel />,
+        },
+        // {
+        //   path: ':userId',
+        //   element: <UserDetails />,
+        // },
       ],
     },
     {

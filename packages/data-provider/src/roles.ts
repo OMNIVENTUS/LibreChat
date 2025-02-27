@@ -42,6 +42,11 @@ export enum PermissionTypes {
    * Type for using the "Run Code" LC Code Interpreter API feature
    */
   RUN_CODE = 'RUN_CODE',
+
+  /**
+   * Type for User Administration
+   */
+  USER_ADMIN = 'USER_ADMIN',
 }
 
 /**
@@ -55,6 +60,7 @@ export enum Permissions {
   READ = 'READ',
   READ_AUTHOR = 'READ_AUTHOR',
   SHARE = 'SHARE',
+  DELETE = 'DELETE',
 }
 
 export const promptPermissionsSchema = z.object({
@@ -87,6 +93,11 @@ export const runCodePermissionsSchema = z.object({
   [Permissions.USE]: z.boolean().default(true),
 });
 
+export const userAdminPermissionsSchema = z.object({
+  [Permissions.USE]: z.boolean().default(false),
+  [Permissions.DELETE]: z.boolean().default(false),
+});
+
 export const roleSchema = z.object({
   name: z.string(),
   [PermissionTypes.PROMPTS]: promptPermissionsSchema,
@@ -95,6 +106,7 @@ export const roleSchema = z.object({
   [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema,
   [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema,
   [PermissionTypes.RUN_CODE]: runCodePermissionsSchema,
+  [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema,
 });
 
 export type TRole = z.infer<typeof roleSchema>;
@@ -104,6 +116,7 @@ export type TBookmarkPermissions = z.infer<typeof bookmarkPermissionsSchema>;
 export type TMultiConvoPermissions = z.infer<typeof multiConvoPermissionsSchema>;
 export type TTemporaryChatPermissions = z.infer<typeof temporaryChatPermissionsSchema>;
 export type TRunCodePermissions = z.infer<typeof runCodePermissionsSchema>;
+export type TUserAdminPermissions = z.infer<typeof userAdminPermissionsSchema>;
 
 const defaultRolesSchema = z.object({
   [SystemRoles.ADMIN]: roleSchema.extend({
@@ -132,6 +145,10 @@ const defaultRolesSchema = z.object({
     [PermissionTypes.RUN_CODE]: runCodePermissionsSchema.extend({
       [Permissions.USE]: z.boolean().default(true),
     }),
+    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.DELETE]: z.boolean().default(true),
+    }),
   }),
   [SystemRoles.USER]: roleSchema.extend({
     name: z.literal(SystemRoles.USER),
@@ -141,6 +158,7 @@ const defaultRolesSchema = z.object({
     [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema,
     [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema,
     [PermissionTypes.RUN_CODE]: runCodePermissionsSchema,
+    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema,
   }),
 });
 
@@ -153,6 +171,7 @@ export const roleDefaults = defaultRolesSchema.parse({
     [PermissionTypes.MULTI_CONVO]: {},
     [PermissionTypes.TEMPORARY_CHAT]: {},
     [PermissionTypes.RUN_CODE]: {},
+    [PermissionTypes.USER_ADMIN]: {},
   },
   [SystemRoles.USER]: {
     name: SystemRoles.USER,
@@ -162,5 +181,6 @@ export const roleDefaults = defaultRolesSchema.parse({
     [PermissionTypes.MULTI_CONVO]: {},
     [PermissionTypes.TEMPORARY_CHAT]: {},
     [PermissionTypes.RUN_CODE]: {},
+    [PermissionTypes.USER_ADMIN]: {},
   },
 });

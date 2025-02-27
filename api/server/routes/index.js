@@ -24,6 +24,7 @@ const auth = require('./auth');
 const edit = require('./edit');
 const keys = require('./keys');
 const user = require('./user');
+const users = require('./users');
 const ask = require('./ask');
 const banner = require('./banner');
 
@@ -33,6 +34,7 @@ module.exports = {
   auth,
   keys,
   user,
+  users,
   tags,
   roles,
   oauth,

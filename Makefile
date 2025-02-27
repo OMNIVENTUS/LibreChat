@@ -1,7 +1,7 @@
 # LibreChat Makefile
 # This Makefile provides helpful commands for working with the LibreChat project
 
-.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user
+.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user ngrok-setup ngrok-dev ngrok-check
 
 # Default target
 help:
@@ -19,6 +19,9 @@ help:
 	@echo "make create-user   - Create a new user"
 	@echo "make e2e           - Run E2E tests"
 	@echo "make stop          - Stop all running services"
+	@echo "make ngrok-setup    - Setup Ngrok with your auth token"
+	@echo "make ngrok-dev      - Run development servers with Ngrok exposure"
+	@echo "make ngrok-check    - Check Ngrok installation"
 
 # Installation
 install:
@@ -32,6 +35,16 @@ dev:
 	npm run backend:dev & npm run frontend:dev
 
 # Build
+
+build-frontend:
+	@echo "Building the frontend..."
+	npm run frontend
+
+build-backend:
+	@echo "Building the backend..."
+	npm run backend
+
+
 run-frontend:
 	@echo "Make sur backend is running first. Building the project..."
 	npm run frontend:dev
@@ -107,3 +120,35 @@ setup-env:
 	else \
 		echo ".env file already exists"; \
 	fi 
+
+# Ngrok Integration
+ngrok-check:
+	@echo "Checking Ngrok installation..."
+	@if command -v ngrok >/dev/null 2>&1; then \
+		echo "✓ Ngrok is installed"; \
+	else \
+		echo "✗ Ngrok is not installed"; \
+		echo "Please install Ngrok from https://ngrok.com/download"; \
+		exit 1; \
+	fi
+
+ngrok-setup:
+	@echo "Setting up Ngrok..."
+	@if [ -z "$(NGROK_TOKEN)" ]; then \
+		echo "Please provide your Ngrok auth token:"; \
+		echo "Usage: make ngrok-setup NGROK_TOKEN=your_token_here"; \
+		echo "Get your token from: https://dashboard.ngrok.com/get-started/your-authtoken"; \
+		exit 1; \
+	fi
+	@echo "Configuring Ngrok with your auth token..."
+	@ngrok config add-authtoken $(NGROK_TOKEN)
+	@echo "Ngrok setup complete!"
+
+ngrok-dev: ngrok-check
+	@echo "Starting development servers with Ngrok exposure..."
+	@echo "Frontend will be available at http://localhost:3080"
+	@echo "Starting backend and frontend..."
+	@echo "Starting Ngrok tunnel..." 
+	@ngrok http 3080 --log=stdout > ngrok.log & \
+	echo "Ngrok tunnel started! Check ngrok.log for the public URL" && \
+	tail -f ngrok.log | grep --line-buffered "url=" 

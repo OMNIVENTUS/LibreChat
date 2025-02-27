@@ -114,10 +114,12 @@ export type TUser = {
   avatar: string;
   role: string;
   provider: string;
+  emailVerified: boolean;
   plugins?: string[];
   backupCodes?: TBackupCode[];
   createdAt: string;
   updatedAt: string;
+  file_access_groups?: string[];
 };
 
 export type TGetConversationsResponse = {
