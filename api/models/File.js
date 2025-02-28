@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const fileSchema = require('./schema/fileSchema');
-
+const logger = require('../utils/logger');
 const File = mongoose.model('File', fileSchema);
 
 /**
@@ -20,33 +20,33 @@ const findFileById = async (file_id, options = {}) => {
  * @returns {Promise<Array<MongoFile>>} Array of accessible files
  */
 const getFiles = async (filter, options = {}) => {
+
   const { user } = options;
-
-  // Early return if no user
-  if (!user?.id) {
-    return [];
-  }
-
+  //handle access groups only if user is defined
   const accessGroups = [
-    ...(user.file_access_groups || []),
-    user.role, // Include the user's role for backward compatibility
-    user.id, // Include user ID for direct shares
+    ...(user?.file_access_groups || []),
+    user?.role, // Include the user's role for backward compatibility
+    user?.id, // Include user ID for direct shares
   ].filter(Boolean);
 
-  const scopeFilter = {
-    $or: [
-      { user: user.id }, // User's own files
-      { scope: 'public' }, // Public files
-      {
-        scope: 'shared',
-        access_control: {
-          $in: accessGroups,
-        },
+  const OrFilter = [
+    { scope: 'public' }, // Public files
+    {
+      scope: 'shared',
+      access_control: {
+        $in: accessGroups,
       },
-    ],
+    },
+  ];
+  if (user?.id) {
+    OrFilter.push({ user: user.id });
+  }
+  const scopeFilter = {
+    $or: OrFilter,
   };
 
-  const finalFilter = { ...filter, ...scopeFilter };
+  const finalFilter = user?.id ? { ...scopeFilter, ...filter } : filter;
+
   const sortOptions = { updatedAt: -1, ...options.sort };
   return await File.find(finalFilter).sort(sortOptions).lean();
 };
