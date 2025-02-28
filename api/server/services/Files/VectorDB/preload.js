@@ -194,11 +194,11 @@ const processSinglePreloadFile = async ({ filepath, filename, req, folderPath })
       req,
       file,
       file_id,
-      entity_id: 'preload',
+      entity_id: 'public',//important to be null so that file is not associated to a specific user
     });
 
     const fileInfo = {
-      user: req.user.id,
+      user: req.user.id,//should i put admin here ? no i think it's better to have the user who uploaded the file
       file_id,
       bytes: file.size,
       filepath: uploadResult.filepath,
