@@ -80,6 +80,7 @@ router.get('/', async function (req, res) {
       publicSharedLinksEnabled,
       analyticsGtmId: process.env.ANALYTICS_GTM_ID,
       instanceProjectId: instanceProject._id.toString(),
+      fileAccessGroups: process.env.FILE_ACCESS_GROUPS?.split(',') || ['public'],
     };
 
     if (ldap) {

@@ -1,10 +1,19 @@
 import { useState } from 'react';
 import { useGetUsers } from '~/data-provider/Users/queries';
-import { useDeleteUserMutation } from '~/data-provider/Users/mutations';
+import { useDeleteUserMutation, useUpdateUserMutation } from '~/data-provider/Users/mutations';
 import { useGetStartupConfig } from '~/data-provider';
 import { useToastContext } from '~/Providers';
 import { useLocalize } from '~/hooks';
-import { Button, Input, Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui';
+import {
+  Button,
+  Input,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  MultiSelectDropDown,
+} from '~/components/ui';
 import { NotificationSeverity } from '~/common';
 import { PlusCircle, Settings2, UserCog } from 'lucide-react';
 import { DataTable } from './components/DataTable';
@@ -15,9 +24,11 @@ export default function UserPanel() {
   const { data: users = [] } = useGetUsers();
   const { data: startupConfig } = useGetStartupConfig();
   const deleteUser = useDeleteUserMutation();
+  const updateUser = useUpdateUserMutation();
   const { showToast } = useToastContext();
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isAccessGroupDialogOpen, setIsAccessGroupDialogOpen] = useState(false);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 
   const handleDeleteUser = async (userId: string) => {
     try {
@@ -34,9 +45,12 @@ export default function UserPanel() {
     }
   };
 
-  const handleUpdateAccessGroups = async (userId: string, groups: string[]) => {
+  const handleUpdateAccessGroups = async () => {
     try {
-      // TODO: Implement the mutation to update user access groups
+      await updateUser.mutateAsync({
+        userId: selectedUser.id || selectedUser._id,
+        data: { file_access_groups: selectedGroups },
+      });
       showToast({
         message: localize('com_users_update_success'),
         severity: NotificationSeverity.SUCCESS,
@@ -52,7 +66,20 @@ export default function UserPanel() {
 
   const openAccessGroupDialog = (user: any) => {
     setSelectedUser(user);
+    setSelectedGroups(user.file_access_groups || []);
     setIsAccessGroupDialogOpen(true);
+  };
+
+  const handleGroupSelection = (value: string) => {
+    setSelectedGroups(current =>
+      current.includes(value)
+        ? current.filter(g => g !== value)
+        : [...current, value]
+    );
+  };
+
+  const isGroupSelected = (value: string) => {
+    return selectedGroups.includes(value);
   };
 
   return (
@@ -84,7 +111,7 @@ export default function UserPanel() {
       </div>
 
       <Dialog open={isAccessGroupDialogOpen} onOpenChange={setIsAccessGroupDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] text-text-primary p-4">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <UserCog className="mr-2 h-5 w-5" />
@@ -96,28 +123,26 @@ export default function UserPanel() {
               <h4 className="font-medium break-all">{selectedUser?.username || selectedUser?.email}</h4>
               <p className="text-sm text-muted-foreground break-words">
                 {localize('com_users_current_groups')}:{' '}
-                {selectedUser?.file_access_groups?.join(', ') || localize('com_users_no_groups')}
+                {selectedGroups.join(', ') || localize('com_users_no_groups')}
               </p>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">{localize('com_users_select_groups')}</label>
-              <Select
-                defaultValue={selectedUser?.file_access_groups?.[0]}
-                onValueChange={(value) => {
-                  // Handle multi-select change
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={localize('com_users_select_placeholder')} />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {startupConfig?.fileAccessGroups?.map((group: string) => (
-                    <SelectItem key={group} value={group}>
-                      {group}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectDropDown
+                title={localize('com_users_select_groups')}
+                value={selectedGroups.map(group => ({ name: group }))}
+                availableValues={(startupConfig?.fileAccessGroups || []).map(group => ({
+                  name: group,
+                  description: group,
+                  pluginKey: group,
+                  value: group,
+                }))}
+                setSelected={handleGroupSelection}
+                isSelected={isGroupSelected}
+                showAbove={true}
+                searchPlaceholder={localize('com_users_select_placeholder')}
+                optionValueKey="value"
+              />
             </div>
           </div>
           <DialogFooter className="flex-col space-y-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0">
@@ -129,8 +154,9 @@ export default function UserPanel() {
               {localize('com_ui_cancel')}
             </Button>
             <Button
-              onClick={() => handleUpdateAccessGroups(selectedUser?.id, [])}
+              onClick={handleUpdateAccessGroups}
               className="w-full sm:w-auto"
+              disabled={updateUser.isLoading}
             >
               {localize('com_ui_save')}
             </Button>
