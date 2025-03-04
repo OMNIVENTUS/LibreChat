@@ -190,7 +190,9 @@ export default function AgentPanel({
     const canEdit =
       (agentQuery.data?.isCollaborative ?? false)
         ? true
-        : agentQuery.data?.author === user?.id || user?.role === SystemRoles.ADMIN;
+        : agentQuery.data?.author === user?.id ||
+          user?.role === SystemRoles.ADMIN ||
+          user?.role === SystemRoles.MANAGER;
 
     return agentQuery.data?.id != null && agentQuery.data.id ? canEdit : true;
   }, [

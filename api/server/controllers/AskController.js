@@ -113,6 +113,8 @@ const AskController = async (req, res, next, initializeClient, addTitle) => {
       userMessage.files = client.options.attachments;
       conversation.model = endpointOption.modelOptions.model;
       delete userMessage.image_urls;
+    } else {
+      logger.debug('[AskController] No attachment !!!!');
     }
 
     if (!abortController.signal.aborted) {

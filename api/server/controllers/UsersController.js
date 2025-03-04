@@ -5,6 +5,9 @@ const { SystemRoles } = require('librechat-data-provider');
 const isAdmin = (req) => {
   return req.user.role === SystemRoles.ADMIN;
 };
+const isManager = (req) => {
+  return req.user.role === SystemRoles.MANAGER;
+};
 
 /**
  * Get all users
@@ -13,7 +16,7 @@ const isAdmin = (req) => {
  */
 const getUsersController = async (req, res) => {
   try {
-    if (!isAdmin(req)) {
+    if (!isAdmin(req) && !isManager(req)) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     const users = await User.find({}, '-password -refreshToken -totpSecret -backupCodes').lean();
@@ -31,7 +34,7 @@ const getUsersController = async (req, res) => {
  */
 const updateUserController = async (req, res) => {
   try {
-    if (!isAdmin(req)) {
+    if (!isAdmin(req) && !isManager(req)) {
       return res.status(403).json({ message: 'Unauthorized' });
     }
     const { userId } = req.params;

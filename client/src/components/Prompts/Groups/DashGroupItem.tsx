@@ -99,7 +99,7 @@ function DashGroupItemComponent({ group, instanceProjectId }: DashGroupItemProps
               aria-label={localize('com_ui_global_group')}
             />
           )}
-          {(isOwner || user?.role === SystemRoles.ADMIN) && (
+          {(isOwner || user?.role === SystemRoles.ADMIN || user?.role === SystemRoles.MANAGER) && (
             <>
               <OGDialog>
                 <OGDialogTrigger asChild>
