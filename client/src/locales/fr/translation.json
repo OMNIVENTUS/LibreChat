@@ -626,6 +626,8 @@
   "com_ui_fork_remember": "Se souvenir",
   "com_ui_fork_remember_checked": "Votre sélection sera mémorisée après utilisation. Vous pouvez la modifier à tout moment dans les paramètres.",
   "com_ui_fork_split_target": "Démarrer la bifurcation ici",
+  "com_ui_shared_prompts_more": "Voir plus",
+  "com_ui_shared_prompts_less": "Voir moins",
   "com_ui_fork_split_target_setting": "Démarrer la bifurcation à partir du message cible par défaut",
   "com_ui_fork_success": "Conversation bifurquée avec succès",
   "com_ui_fork_visible": "Messages visibles uniquement",

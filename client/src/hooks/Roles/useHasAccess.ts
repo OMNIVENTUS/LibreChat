@@ -13,10 +13,7 @@ const useHasAccess = ({
   const user = authContext?.user;
   const roles = authContext?.roles;
   const isAuthenticated = authContext?.isAuthenticated || false;
-  console.log('user', user);
-  console.log('roles', roles);
-  console.log('permissionType', permissionType);
-  console.log('permission', permission);
+
   const checkAccess = useCallback(
     ({
       user,

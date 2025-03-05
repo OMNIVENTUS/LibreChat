@@ -666,6 +666,8 @@
   "com_ui_field_required": "This field is required",
   "com_ui_filter_prompts": "Filter Prompts",
   "com_ui_filter_prompts_name": "Filter prompts by name",
+  "com_ui_shared_prompts_more": "See more",
+  "com_ui_shared_prompts_less": "See less",
   "com_ui_finance": "Finance",
   "com_ui_fork": "Fork",
   "com_ui_fork_all_target": "Include all to/from here",
