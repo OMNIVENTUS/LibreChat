@@ -11,6 +11,7 @@ import SubRow from '~/components/Chat/Messages/SubRow';
 import { useMessageActions } from '~/hooks';
 import { cn, logger } from '~/utils';
 import store from '~/store';
+import BusinessActionsCard from '../Chat/Messages/ui/BusinessActionsCard';
 
 type ContentRenderProps = {
   message?: TMessage;
@@ -59,7 +60,21 @@ const ContentRender = memo(
     const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
     const fontSize = useRecoilValue(store.fontSize);
     const handleRegenerateMessage = useCallback(() => regenerateMessage(), [regenerateMessage]);
-    // const { isCreatedByUser, error, unfinished } = msg ?? {};
+
+    // Cast msg to any to safely access contextualActions without TypeScript errors
+    const extMsg = msg as any;
+    const hasBusinessActions =
+      !msg?.isCreatedByUser &&
+      extMsg?.contextualActions &&
+      Array.isArray(extMsg.contextualActions) &&
+      extMsg.contextualActions.length > 0;
+
+    // Show loading state for business actions when a new AI message is received
+    // but doesn't yet have business actions
+    const shouldShowActionsLoading =
+      !msg?.isCreatedByUser &&
+      !hasBusinessActions;
+
     const isLast = useMemo(
       () =>
         !(msg?.children?.length ?? 0) && (msg?.depth === latestMessage?.depth || msg?.depth === -1),
@@ -160,6 +175,13 @@ const ContentRender = memo(
           <h2 className={cn('select-none font-semibold', fontSize)}>{messageLabel}</h2>
           <div className="flex-col gap-1 md:gap-3">
             <div className="flex max-w-full flex-grow flex-col gap-0">
+              {/* Display business actions if available or loading */}
+              <BusinessActionsCard
+                actions={extMsg?.contextualActions || []}
+                messageId={msg?.messageId}
+                isLoading={shouldShowActionsLoading}
+              />
+
               <ContentParts
                 edit={edit}
                 isLast={isLast}

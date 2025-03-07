@@ -137,6 +137,27 @@ const messageSchema = mongoose.Schema(
     expiredAt: {
       type: Date,
     },
+    contextualActions: [{
+      type: {
+        type: String,
+        enum: ['link', 'button', 'action'],
+        required: true,
+      },
+      label: {
+        type: String,
+        required: true,
+      },
+      url: String,
+      actionId: String,
+      thumbnailUrl: String,
+      icon: String,
+      style: {
+        type: String,
+        enum: ['primary', 'secondary', 'danger', 'neutral'],
+        default: 'primary',
+      },
+    },
+    ],
   },
   { timestamps: true },
 );

@@ -3,7 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { useMessageProcess } from '~/hooks';
 import type { TMessageProps } from '~/common';
 import MessageRender from './ui/MessageRender';
-// eslint-disable-next-line import/no-cycle
+
 import MultiMessage from './MultiMessage';
 import { cn } from '~/utils';
 import store from '~/store';
@@ -37,6 +37,7 @@ export default function Message(props: TMessageProps) {
     latestMultiMessage,
     isSubmittingFamily,
   } = useMessageProcess({ message: props.message });
+
   const { message, currentEditId, setCurrentEditId } = props;
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
 
@@ -45,7 +46,6 @@ export default function Message(props: TMessageProps) {
   }
 
   const { children, messageId = null } = message;
-
   return (
     <>
       <MessageContainer handleScroll={handleScroll}>
@@ -74,7 +74,7 @@ export default function Message(props: TMessageProps) {
           </div>
         ) : (
           <div className="m-auto justify-center p-4 py-2 md:gap-6 ">
-            <MessageRender {...props} />
+            <MessageRender {...props} isSubmittingFamily={isSubmittingFamily} />
           </div>
         )}
       </MessageContainer>

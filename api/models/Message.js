@@ -201,7 +201,10 @@ async function updateMessage(req, message, metadata) {
     if (!updatedMessage) {
       throw new Error('Message not found or user not authorized.');
     }
-
+    // Add contextualActions if they exist
+    // if (metadata?.contextualActions && Array.isArray(metadata.contextualActions)) {
+    //   message.contextualActions = metadata.contextualActions;
+    // }
     return {
       messageId: updatedMessage.messageId,
       conversationId: updatedMessage.conversationId,
@@ -210,6 +213,7 @@ async function updateMessage(req, message, metadata) {
       text: updatedMessage.text,
       isCreatedByUser: updatedMessage.isCreatedByUser,
       tokenCount: updatedMessage.tokenCount,
+      contextualActions: updatedMessage?.contextualActions,
     };
   } catch (err) {
     logger.error('Error updating message:', err);

@@ -230,13 +230,40 @@ to see live changes on the front go to http://localhost:3090/
   - add simple user administration interface for users of type admin
   - add for admin, an interface to add shared files to the file library
 
-let's implement in the sidePanel Nav a new button to access a simple user administration page.
+todo:
 
-the page should be on the endpoind /d/users/\* with a children route on /d/users/:userId. that route configuration should be in the dashboardRoutes.
+display file scope in the file manager
 
-add a new PermissionTypes (USER_ADMIN) and a new Permission 'DELETE'
-update the useSideNavLinks hook to add a two const to check user access to USER_ADMIN and the ability to Delete user. if user has access to USER_ADMIN push a links with a localized title 'User admin'.
+improvements:
 
-the user admin button should copy on the FilesPanel design, with a panelTable a little like the one for Files.
+- put users in recoil state (not priority)
+- supprimer l'option pour ajouter des utilisateurs
+- add a button to force the update of the preloaded files
+- show token usage for each user in the admin interface but also in the main view (user/:id page)
+- bien gerer la suppression d'un utilisateur par rapport à ses fichiers
 
-you will then create a data-provider for users in client/src/data-provider/Users following the same file conventions as the over data providers.
+there is an error when i submit request: failed to fetch models from Mistral API , the server responded with status 401 but i am using ollama.
+
+add new en var FILE_ACCESS_GROUPS
+
+- limit prompt creation to admin only
+- display prompt in chip format above the chat
+- visualy increase user balance limit
+- add granularity to some interfaces features (prompt, preset, bookmark, agent)
+  be able to deactive some features only for some roles (admin, manager, user)
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  agents: true
+
+  - revalidate the prompts to get shared promps above the chat when a new prompt is created.
+
+  - use authentication from another source (sql external database)
+
+generate a diagram of the project structure
+mmdc -i archi.md -o output.pdf

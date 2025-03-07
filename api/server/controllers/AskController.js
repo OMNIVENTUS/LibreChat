@@ -3,6 +3,7 @@ const { createAbortController, handleAbortError } = require('~/server/middleware
 const { sendMessage, createOnProgress } = require('~/server/utils');
 const { saveMessage } = require('~/models');
 const { logger } = require('~/config');
+const BusinessActionsService = require('~/server/services/BusinessActionsService');
 
 const AskController = async (req, res, next, initializeClient, addTitle) => {
   let {
@@ -50,6 +51,12 @@ const AskController = async (req, res, next, initializeClient, addTitle) => {
       }
     }
   };
+
+  // Start fetching business actions in parallel
+  const businessActionsPromise = BusinessActionsService.generateActions(text, user, {
+    conversationId,
+    modelOptions: endpointOption.modelOptions,
+  });
 
   let getText;
 
@@ -118,35 +125,73 @@ const AskController = async (req, res, next, initializeClient, addTitle) => {
     }
 
     if (!abortController.signal.aborted) {
+      let actions;
+      // Process business actions in parallel
+      try {
+        actions = await businessActionsPromise;
+        const responseMessageId = response.messageId;
+
+        // If actions are found, send them as an SSE event
+        if (actions && actions.length > 0) {
+          logger.debug('[AskController] save response message with actions!!!!');
+          await saveMessage(
+            req,
+            { ...response, user, contextualActions: actions },
+            { context: 'api/server/controllers/AskController.js - update response with actions' },
+          );
+          // Send actions data to the client via SSE
+          // Include both messageId and the full actions array
+          //setTimeout(() => {
+          res.write(`event: business_actions\ndata: ${JSON.stringify({
+            messageId: responseMessageId,
+            actions: actions,
+            count: actions.length,
+          })}\n\n`);
+          //}, 10000);
+        } else {
+          logger.debug('[AskController] No business actions generated');
+        }
+      } catch (error) {
+        logger.error('[AskController] Error processing business actions:', error);
+        // Continue with the response even if business actions fail
+      }
+
+      // Now send the final message with everything included
+      logger.debug('[AskController] sendMessage !!!!');
+      //setTimeout(() => {
       sendMessage(res, {
         final: true,
         conversation,
         title: conversation.title,
         requestMessage: userMessage,
-        responseMessage: response,
+        responseMessage: { ...response, contextualActions: actions || [] },
       });
       res.end();
+      //}, 300000);
 
       if (!client.savedMessageIds.has(response.messageId)) {
+        logger.debug('[AskController] saveMessage !!!!');
         await saveMessage(
           req,
           { ...response, user },
           { context: 'api/server/controllers/AskController.js - response end' },
         );
       }
+
+      if (addTitle && parentMessageId === Constants.NO_PARENT && newConvo) {
+        logger.debug('[AskController] addTitle !!!!');
+        await addTitle(req, {
+          text,
+          response,
+          client,
+        });
+      }
     }
 
     if (!client.skipSaveUserMessage) {
+      logger.debug('[AskController] dont skip save user message !!!!');
       await saveMessage(req, userMessage, {
         context: 'api/server/controllers/AskController.js - don\'t skip saving user message',
-      });
-    }
-
-    if (addTitle && parentMessageId === Constants.NO_PARENT && newConvo) {
-      addTitle(req, {
-        text,
-        response,
-        client,
       });
     }
   } catch (error) {

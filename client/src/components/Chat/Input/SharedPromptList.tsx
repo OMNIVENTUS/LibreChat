@@ -116,7 +116,7 @@ const SharedPromptList: React.FC<SharedPromptListProps> = ({
           <Chip
             key={prompt._id || `prompt-${prompt.name}`}
             label={prompt.name}
-            variant="primary"
+            variant="default"
             size="sm"
             className={cn(
               'cursor-pointer shadow-sm',
