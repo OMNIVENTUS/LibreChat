@@ -135,7 +135,10 @@
       "data/",
       "client/",
       "admin/",
-      "packages/"
+      "packages/",
+      "preload/",
+      "uploads/",
+      "uploads/**/*"
     ]
   }
 }
