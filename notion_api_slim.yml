@@ -1,0 +1,1264 @@
+openapi: 3.0.0
+info:
+  title: Notion API
+  description: "Hello and welcome!\n\nTo make use of this API collection collection as it's written."
+  version: 1.0.0
+servers:
+  - url: https://api.notion.com
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Comment:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Always "comment"
+          example: comment
+        id:
+          type: string
+          description: Unique identifier for the comment
+          example: 8a9c5b64-e1c8-4d41-b7be-0c6a72ab5c1f
+        parent:
+          type: object
+          description: Information about the comment's parent
+          properties:
+            type:
+              type: string
+              description: Type of parent, either "page_id" or "block_id"
+              example: page_id
+            page_id:
+              type: string
+              description: ID of parent page if parent type is page_id
+              example: 59833787-2cf9-4fdf-8782-e53db20768a5
+            block_id:
+              type: string
+              description: ID of parent block if parent type is block_id
+        discussion_id:
+          type: string
+          description: ID of the discussion thread this comment belongs to
+          example: 5e123f22-9135-43b3-9df3-76c841d6a546
+        created_time:
+          type: string
+          format: date-time
+          description: Date and time when this comment was created
+          example: 2022-03-07T19:10:04.968Z
+        created_by:
+          type: object
+          description: User who created this comment
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: ee5f0f84-409a-440f-983a-e9733b5f0d1a
+        last_edited_time:
+          type: string
+          format: date-time
+          description: Date and time when this comment was last updated
+          example: 2022-03-07T21:49:37.913Z
+        last_edited_by:
+          type: object
+          description: User who last edited this comment
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: ee5f0f84-409a-440f-983a-e9733b5f0d1a
+        rich_text:
+          type: array
+          description: Rich text in the comment
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Type of rich text
+                example: text
+              text:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    description: Text content
+                    example: This is a comment
+                  link:
+                    type: object
+                    nullable: true
+                    properties:
+                      url:
+                        type: string
+                        description: URL of the link
+              annotations:
+                type: object
+                properties:
+                  bold:
+                    type: boolean
+                    example: false
+                  italic:
+                    type: boolean
+                    example: false
+                  strikethrough:
+                    type: boolean
+                    example: false
+                  underline:
+                    type: boolean
+                    example: false
+                  code:
+                    type: boolean
+                    example: false
+                  color:
+                    type: string
+                    example: default
+              plain_text:
+                type: string
+                description: Plain text content
+                example: This is a comment
+              href:
+                type: string
+                nullable: true
+    Block:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Always "block"
+          example: block
+        id:
+          type: string
+          description: Unique identifier for the block
+          example: b55c9c91-384d-452b-81db-d1ef79372b75
+        parent:
+          type: object
+          description: Information about the block's parent
+          properties:
+            type:
+              type: string
+              description: Type of parent, either "page_id", "database_id", or "block_id"
+              example: page_id
+            page_id:
+              type: string
+              description: ID of parent page if parent type is page_id
+              example: 59833787-2cf9-4fdf-8782-e53db20768a5
+            database_id:
+              type: string
+              description: ID of parent database if parent type is database_id
+            block_id:
+              type: string
+              description: ID of parent block if parent type is block_id
+        created_time:
+          type: string
+          format: date-time
+          description: Date and time when this block was created
+          example: 2020-03-17T19:10:04.968Z
+        created_by:
+          type: object
+          description: User who created this block
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: ee5f0f84-409a-440f-983a-e9733b5f0d1a
+        last_edited_time:
+          type: string
+          format: date-time
+          description: Date and time when this block was last updated
+          example: 2020-03-17T21:49:37.913Z
+        last_edited_by:
+          type: object
+          description: User who last edited this block
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: ee5f0f84-409a-440f-983a-e9733b5f0d1a
+        has_children:
+          type: boolean
+          description: Whether this block has children blocks nested within it
+          example: false
+        archived:
+          type: boolean
+          description: Whether this block is archived (deleted)
+          example: false
+        type:
+          type: string
+          description: Type of block
+          example: paragraph
+        paragraph:
+          type: object
+          description: Properties specific to a paragraph block
+        heading_1:
+          type: object
+          description: Properties specific to a heading_1 block
+        heading_2:
+          type: object
+          description: Properties specific to a heading_2 block
+        heading_3:
+          type: object
+          description: Properties specific to a heading_3 block
+        bulleted_list_item:
+          type: object
+          description: Properties specific to a bulleted_list_item block
+        numbered_list_item:
+          type: object
+          description: Properties specific to a numbered_list_item block
+        to_do:
+          type: object
+          description: Properties specific to a to_do block
+        toggle:
+          type: object
+          description: Properties specific to a toggle block
+        code:
+          type: object
+          description: Properties specific to a code block
+        child_page:
+          type: object
+          description: Properties specific to a child_page block
+        child_database:
+          type: object
+          description: Properties specific to a child_database block
+        embed:
+          type: object
+          description: Properties specific to an embed block
+        image:
+          type: object
+          description: Properties specific to an image block
+        video:
+          type: object
+          description: Properties specific to a video block
+        file:
+          type: object
+          description: Properties specific to a file block
+        pdf:
+          type: object
+          description: Properties specific to a pdf block
+        bookmark:
+          type: object
+          description: Properties specific to a bookmark block
+        callout:
+          type: object
+          description: Properties specific to a callout block
+        quote:
+          type: object
+          description: Properties specific to a quote block
+        divider:
+          type: object
+          description: Properties specific to a divider block
+        table_of_contents:
+          type: object
+          description: Properties specific to a table_of_contents block
+        column:
+          type: object
+          description: Properties specific to a column block
+        column_list:
+          type: object
+          description: Properties specific to a column_list block
+        link_preview:
+          type: object
+          description: Properties specific to a link_preview block
+        synced_block:
+          type: object
+          description: Properties specific to a synced_block block
+        template:
+          type: object
+          description: Properties specific to a template block
+        link_to_page:
+          type: object
+          description: Properties specific to a link_to_page block
+        table:
+          type: object
+          description: Properties specific to a table block
+        table_row:
+          type: object
+          description: Properties specific to a table_row block
+        equation:
+          type: object
+          description: Properties specific to an equation block
+        breadcrumb:
+          type: object
+          description: Properties specific to a breadcrumb block
+    Page:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Always "page"
+          example: page
+        id:
+          type: string
+          description: Unique identifier for the page
+          example: c4d39556-6364-46a1-8a61-ebbb668f7445
+        created_time:
+          type: string
+          format: date-time
+          description: Date and time when this page was created
+          example: '2021-04-27T20:38:00.000Z'
+        last_edited_time:
+          type: string
+          format: date-time
+          description: Date and time when this page was last updated
+          example: '2022-03-02T05:22:00.000Z'
+        created_by:
+          type: object
+          description: User who created the page
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: 6794760a-1f15-45cd-9c65-0dfe42f5135a
+        last_edited_by:
+          type: object
+          description: User who last edited the page
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: 92a680bb-6970-4726-952b-4f4c03bff617
+        parent:
+          type: object
+          description: The parent of this page
+          properties:
+            type:
+              type: string
+              example: page_id
+            page_id:
+              type: string
+              example: c1218692-102d-4b47-ab38-c21900b3557b
+        archived:
+          type: boolean
+          description: Whether the page is archived (deleted)
+          example: false
+        properties:
+          type: object
+          description: Page properties
+          additionalProperties: true
+        url:
+          type: string
+          description: The URL of the page in Notion
+          example: https://www.notion.so/c4d395566364
+    Database:
+      type: object
+      properties:
+        object:
+          type: string
+          description: Always "database"
+          example: database
+        id:
+          type: string
+          description: Unique identifier for the database
+          example: 8a3c7085-4e5e-4b89-9848-8eeac6e9a53d
+        created_time:
+          type: string
+          format: date-time
+          description: Date and time when this database was created
+          example: '2022-07-15T13:42:00.000Z'
+        last_edited_time:
+          type: string
+          format: date-time
+          description: Date and time when this database was last updated
+          example: '2022-08-10T15:51:00.000Z'
+        created_by:
+          type: object
+          description: User who created the database
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: 6794760a-1f15-45cd-9c65-0dfe42f5135a
+        last_edited_by:
+          type: object
+          description: User who last edited the database
+          properties:
+            object:
+              type: string
+              example: user
+            id:
+              type: string
+              example: 92a680bb-6970-4726-952b-4f4c03bff617
+        title:
+          type: array
+          description: Name of the database as it appears in Notion
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                example: text
+              text:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    example: Task List
+                  link:
+                    type: object
+                    nullable: true
+              annotations:
+                type: object
+                properties:
+                  bold:
+                    type: boolean
+                    example: false
+                  italic:
+                    type: boolean
+                    example: false
+                  strikethrough:
+                    type: boolean
+                    example: false
+                  underline:
+                    type: boolean
+                    example: false
+                  code:
+                    type: boolean
+                    example: false
+                  color:
+                    type: string
+                    example: default
+              plain_text:
+                type: string
+                example: Task List
+              href:
+                type: string
+                nullable: true
+        description:
+          type: array
+          description: Description of the database as it appears in Notion
+          items:
+            type: object
+        icon:
+          type: object
+          nullable: true
+          description: Database icon
+        cover:
+          type: object
+          nullable: true
+          description: Database cover image
+        properties:
+          type: object
+          description: Schema of database properties
+          additionalProperties:
+            type: object
+            properties:
+              id:
+                type: string
+                example: "%3BcxZ"
+              name:
+                type: string
+                example: Name
+              type:
+                type: string
+                example: title
+              title:
+                type: object
+        parent:
+          type: object
+          description: The parent of this database
+          properties:
+            type:
+              type: string
+              example: page_id
+            page_id:
+              type: string
+              example: b8595b75-abd1-4cad-8dfe-f935a8ef57cb
+        url:
+          type: string
+          description: The URL of the database in Notion
+          example: https://www.notion.so/8a3c70854e5e4b8998488eeac6e9a53d
+        archived:
+          type: boolean
+          description: Whether the database is archived (deleted)
+          example: false
+        is_inline:
+          type: boolean
+          description: Whether the database is inline or page-based
+          example: true
+          
+security:
+  - bearerAuth: []
+tags:
+  - name: Users
+    description: >-
+      All actions in a Notion workspace are associated to a
+      [user](https://developers.notion.com/reference/user), whether it be a bot
+      via a [Notion
+      integration](https://developers.notion.com/docs/getting-started) or a
+      person interacting with Notion's UI.
+
+
+      These endpoints allow developers to interact with users programmatically
+      by [listing all users](https://developers.notion.com/reference/get-user),
+      [retrieving information about your integration's
+      bot](https://developers.notion.com/reference/get-self), or [retrieving a
+      specific user](https://developers.notion.com/reference/get-user) in your
+      Notion workspace.
+
+
+      To learn more, read [Notion's official
+      documentation](https://developers.notion.com/reference/user) for endpoints
+      related to users.
+  - name: Databases
+    description: >-
+      Databases represent collections of Notion pages that can be
+      [sorted](https://developers.notion.com/reference/post-database-query-sort)
+      and
+      [queried](https://developers.notion.com/reference/post-database-query).
+      Each database will have a schema (or properties) that represent the
+      columns in the database table. Notion offers several types of properties,
+      as described in the [official
+      documentation](https://developers.notion.com/reference/property-object).
+
+
+      These database-related endpoints allow developers to work with databases
+      programmatically by
+      [creating](https://developers.notion.com/reference/create-a-database),
+      [retrieving](https://developers.notion.com/reference/retrieve-a-database),
+      and [updating](https://developers.notion.com/reference/update-a-database)
+      them.
+
+
+      To learn more, read [Notion's official
+      documentation](https://developers.notion.com/reference/database) for
+      endpoints related to databases. We also recommend reading the official
+      Notion guide for [working with
+      databases](https://developers.notion.com/docs/working-with-page-content).
+  - name: Pages
+    description: >-
+      Pages represent documents in Notion workspaces that can be created in a
+      workspace directly or organized within in a Notion database.
+
+
+      These page-related endpoints allow developers to work with pages
+      programmatically by
+      [creating](https://developers.notion.com/reference/post-page),
+      [retrieving](https://developers.notion.com/reference/retrieve-a-page),
+      [updating](https://developers.notion.com/reference/patch-page), and
+      [archiving](https://developers.notion.com/reference/archive-a-page) them.
+
+
+      To learn more, read [Notion's official
+      documentation](https://developers.notion.com/reference/page) for endpoints
+      related to pages. We also recommend reading the official Notion guide for
+      [working with page
+      content](https://developers.notion.com/docs/working-with-page-content).
+  - name: Search
+    description: >-
+      Search all pages and databases shared with your Notion integration. To
+      learn more, read Notion's [official
+      documentation](https://developers.notion.com/reference/post-search) for
+      the Public API endpoints.
+  - name: Comments
+    description: >-
+      [Comments](https://developers.notion.com/reference/comment-object) can be
+      added to a page or inline (i.e., to blocks).  
+
+      These comment-related endpoints allow developers to work with comments
+      programmatically by
+      [creating](https://developers.notion.com/reference/create-a-comment) and
+      [retrieving](https://developers.notion.com/reference/retrieve-a-block)
+      them.  
+        
+      To learn more, read [Notion's official
+      documentation](https://developers.notion.com/reference/comment-object) for
+      endpoints related to comments. We also recommend reading the official
+      Notion guide for [working with
+      comments](https://developers.notion.com/docs/working-with-comments).
+paths:
+  
+  /v1/databases/{id}:
+    get:
+      operationId: getDatabase
+      tags:
+        - Databases
+      summary: Retrieve a database
+      description: 'Retrieves a database object using the ID specified in the request path. '
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{DATABASE_ID}}'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Database"
+    patch:
+      operationId: updateDatabase
+      tags:
+        - Databases
+      summary: Update database properties
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                properties:
+                  Wine Pairing:
+                    name: New Property Name
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+          
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{DATABASE_ID}}'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Database"
+              
+  /v1/databases/{id}/query:
+    post:
+      operationId: queryDatabase
+      tags:
+        - Databases
+      summary: Filter a database
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                filter:
+                  type: object
+                  description: The filter to apply to the database query
+                sorts:
+                  type: array
+                  description: The sort criteria to apply to the database query
+                  items:
+                    type: object
+                    properties:
+                      property:
+                        type: string
+                        description: Name of the property to sort against
+                      direction:
+                        type: string
+                        enum: [ascending, descending]
+                        description: Direction to sort
+                      timestamp:
+                        type: string
+                        enum: [created_time, last_edited_time]
+                        description: Timestamp to sort against instead of a property
+                start_cursor:
+                  type: string
+                  description: If supplied, returns a page of results starting after the cursor provided
+                page_size:
+                  type: integer
+                  description: The number of items to return. Maximum is 100.
+              example:
+                filter:
+                  property: "Status"
+                  select:
+                    equals: "Reading"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+          
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{DATABASE_ID}}'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Database"
+                
+  /v1/databases/:
+    post:
+      operationId: createDatabase
+      tags:
+        - Databases
+      summary: Create a database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent, title, properties]
+              properties:
+                parent:
+                  type: object
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      enum: [page_id, workspace]
+                      description: Type of parent (page or workspace)
+                    page_id:
+                      type: string
+                      description: ID of the parent page
+                title:
+                  type: array
+                  description: Title of database as it appears in Notion
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: [text]
+                      text:
+                        type: object
+                        properties:
+                          content:
+                            type: string
+                          link:
+                            type: object
+                            nullable: true
+                properties:
+                  type: object
+                  description: Schema for the database
+                  additionalProperties:
+                    type: object
+                    properties:
+                      title: 
+                        type: object
+                      rich_text: 
+                        type: object
+                      number: 
+                        type: object
+                        properties:
+                          format:
+                            type: string
+                            enum: [number, dollar, euro, pound, yen, ruble, rupee, won, yuan, percent]
+                      select:
+                        type: object
+                        properties:
+                          options:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                color:
+                                  type: string
+                      multi_select:
+                        type: object
+                        properties:
+                          options:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                color:
+                                  type: string
+                      date:
+                        type: object
+                      people:
+                        type: object
+                      files:
+                        type: object
+                      checkbox:
+                        type: object
+                      url:
+                        type: object
+                      email:
+                        type: object
+                      phone_number:
+                        type: object
+                      formula:
+                        type: object
+                      relation:
+                        type: object
+                      rollup:
+                        type: object
+                      created_time:
+                        type: object
+                      created_by:
+                        type: object
+                      last_edited_time:
+                        type: object
+                      last_edited_by:
+                        type: object
+                icon:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [emoji, external]
+                    emoji:
+                      type: string
+                    external:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                cover:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [external]
+                    external:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+             
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Database"
+  /v1/pages/:
+    post:
+      operationId: createPage
+      tags:
+        - Pages
+      summary: Create a page with content
+      description: Creates a new page in a Notion workspace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [parent, properties, icon]
+              properties:
+                icon:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [emoji, external]
+                      description: Type of icon
+                    emoji:
+                      type: string
+                      description: Emoji character
+                    external:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          description: URL of external icon
+                cover:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                      enum: [external]
+                      description: Type of cover
+                    external:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          description: URL of external cover image
+                parent:
+                  type: object
+                  required: [type]
+                  properties:
+                    type:
+                      type: string
+                      enum: [page_id, database_id]
+                      description: Type of parent (page or database)
+                    page_id:
+                      type: string
+                      description: ID of the parent page
+                    database_id:
+                      type: string
+                      description: ID of the parent database
+                properties:
+                  type: object
+                  description: Page properties (varies based on parent)
+                children:
+                  type: array
+                  description: Page content blocks
+                  items:
+                    type: object
+                    $ref: "#/components/schemas/Block"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Page"
+                
+  /v1/pages/{id}:
+    get:
+      operationId: getPage
+      tags:
+        - Pages
+      summary: Retrieve a page
+      description: >-
+        Retrieves a Page object using the ID in the request path. This endpoint
+        exposes page properties, not page content. 
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{PAGE_ID}}'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Page"
+    patch:
+      operationId: updatePage
+      tags:
+        - Pages
+      summary: Update page properties
+      description: Updates page property values for the specified page
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                properties:
+                  type: object
+                  description: Page properties to update
+                archived:
+                  type: boolean
+                  description: Set to true to archive (delete) a page
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: '{{PAGE_ID}}'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: "#/components/schemas/Page"
+                
+  /v1/search:
+    post:
+      operationId: search
+      tags:
+        - Search
+      summary: Search
+      description: Searches all pages and databases shared with the integration. The results may include databases and pages that the integration doesn't have access to.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: The text that the API compares page and database titles against.
+                sort:
+                  type: object
+                  description: The sort criteria for the results.
+                  properties:
+                    direction:
+                      type: string
+                      enum: [ascending, descending]
+                      description: The direction to sort results.
+                    timestamp:
+                      type: string
+                      enum: [last_edited_time]
+                      description: The timestamp to sort against.
+                filter:
+                  type: object
+                  description: The filter criteria for the results.
+                  properties:
+                    value:
+                      type: string
+                      enum: [page, database]
+                      description: The type of object to filter by.
+                    property:
+                      type: string
+                      enum: [object]
+                      description: The property to filter by.
+                start_cursor:
+                  type: string
+                  description: If supplied, returns a page of results starting after the cursor provided.
+                page_size:
+                  type: integer
+                  description: The number of items to return. Maximum is 100.
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                    description: Always "list"
+                  results:
+                    type: array
+                    description: List of results
+                    items:
+                      type: object
+                      description: A page or database object
+                  next_cursor:
+                    type: string
+                    nullable: true
+                    description: Cursor to the next page of results
+                  has_more:
+                    type: boolean
+                    description: Whether there are more results
+                  type:
+                    type: string
+                    description: Type of search result
+                  page:
+                    type: object
+                    description: Page search results
+  /v1/comments:
+    get:
+      operationId: getComments
+      tags:
+        - Comments
+      summary: Retrieve comments
+      description: Retrieves all comments for a block or page.
+      parameters:
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+        - name: block_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID of the block to retrieve comments for
+          example: '{{BLOCK_ID}}'
+        - name: page_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: ID of the page to retrieve comments for
+          example: '{{PAGE_ID}}'
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+          description: The number of comments to return. Maximum is 100.
+          example: '100'
+        - name: start_cursor
+          in: query
+          schema:
+            type: string
+          description: If supplied, returns a page of results starting after the cursor provided.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  object:
+                    type: string
+                    description: Always "list"
+                    example: list
+                  results:
+                    type: array
+                    description: List of Comment objects
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  next_cursor:
+                    type: string
+                    nullable: true
+                    description: Cursor to the next page of results
+                  has_more:
+                    type: boolean
+                    description: Whether there are more results
+                    example: false
+              
+    post:
+      operationId: createComment
+      tags:
+        - Comments
+      summary: Create a comment
+      description: Creates a new comment in a discussion thread or creates a new discussion thread on a block or page.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                parent:
+                  type: object
+                  description: The parent page or block where the comment is added
+                  properties:
+                    page_id:
+                      type: string
+                      description: ID of the page to add the comment to
+                    block_id:
+                      type: string
+                      description: ID of the block to add the comment to
+                discussion_id:
+                  type: string
+                  description: ID of the discussion thread to add the comment to. Required when adding a comment to an existing discussion.
+                rich_text:
+                  type: array
+                  description: Rich text in the comment
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        description: Type of rich text
+                        example: text
+                      text:
+                        type: object
+                        properties:
+                          content:
+                            type: string
+                            description: Text content
+                          link:
+                            type: object
+                            nullable: true
+                            properties:
+                              url:
+                                type: string
+                                description: URL of the link
+              required:
+                - rich_text
+              example:
+                parent:
+                  page_id: "59833787-2cf9-4fdf-8782-e53db20768a5"
+                rich_text:
+                  - type: text
+                    text:
+                      content: "Here's a comment with a link"
+                      link:
+                        url: "https://developers.notion.com"
+      parameters:
+        - name: Content-Type
+          in: header
+          schema:
+            type: string
+          example: application/json
+        - name: Notion-Version
+          in: header
+          required: true
+          schema:
+            type: string
+            default: 2022-06-28
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+

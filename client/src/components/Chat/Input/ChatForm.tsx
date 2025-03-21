@@ -35,6 +35,7 @@ import StopButton from './StopButton';
 import SendButton from './SendButton';
 import Mention from './Mention';
 import store from '~/store';
+import SharedPromptList from './SharedPromptList';
 
 const ChatForm = ({ index = 0 }) => {
   const submitButtonRef = useRef<HTMLButtonElement>(null);
@@ -155,113 +156,120 @@ const ChatForm = ({ index = 0 }) => {
     ? `pr-${uploadActive ? '12' : '4'} pl-12`
     : `pl-${uploadActive ? '12' : '4'} pr-12`;
 
+  const handleSubmit = methods.handleSubmit((data) => submitMessage(data));
+
   return (
     <form
-      onSubmit={methods.handleSubmit((data) => submitMessage(data))}
-      className={cn(
-        'mx-auto flex flex-row gap-3 pl-2 transition-all duration-200 last:mb-2',
-        maximizeChatSpace ? 'w-full max-w-full' : 'md:max-w-2xl xl:max-w-3xl',
-      )}
+      className={cn('stretch mx-2 flex flex-col gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-3xl', {
+        'lg:max-w-4xl': isAssistantsEndpoint(endpoint),
+      })}
+      onSubmit={disableInputs ? undefined : handleSubmit}
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">
-        <div className="flex w-full items-center">
-          {showPlusPopover && !isAssistantsEndpoint(endpoint) && (
-            <Mention
-              setShowMentionPopover={setShowPlusPopover}
-              newConversation={generateConversation}
-              textAreaRef={textAreaRef}
-              commandChar="+"
-              placeholder="com_ui_add_model_preset"
-              includeAssistants={false}
-            />
-          )}
-          {showMentionPopover && (
-            <Mention
-              setShowMentionPopover={setShowMentionPopover}
-              newConversation={newConversation}
-              textAreaRef={textAreaRef}
-            />
-          )}
-          <PromptsCommand index={index} textAreaRef={textAreaRef} submitPrompt={submitPrompt} />
-          <div className="transitional-all relative flex w-full flex-grow flex-col overflow-hidden rounded-3xl bg-surface-tertiary text-text-primary duration-200">
-            <TemporaryChat
-              isTemporaryChat={isTemporaryChat}
-              setIsTemporaryChat={setIsTemporaryChat}
-            />
-            <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
-            <FileFormWrapper disableInputs={disableInputs}>
-              {endpoint && (
-                <>
-                  <CollapseChat
-                    isCollapsed={isCollapsed}
-                    isScrollable={isScrollable}
-                    setIsCollapsed={setIsCollapsed}
-                  />
-                  <TextareaAutosize
-                    {...registerProps}
-                    ref={(e) => {
-                      ref(e);
-                      textAreaRef.current = e;
-                    }}
-                    disabled={disableInputs}
-                    onPaste={handlePaste}
-                    onKeyDown={handleKeyDown}
-                    onKeyUp={handleKeyUp}
-                    onHeightChange={() => {
-                      if (textAreaRef.current) {
-                        const scrollable = checkIfScrollable(textAreaRef.current);
-                        setIsScrollable(scrollable);
-                      }
-                    }}
-                    onCompositionStart={handleCompositionStart}
-                    onCompositionEnd={handleCompositionEnd}
-                    id={mainTextareaId}
-                    tabIndex={0}
-                    data-testid="text-input"
-                    rows={1}
-                    onFocus={() => isCollapsed && setIsCollapsed(false)}
-                    onClick={() => isCollapsed && setIsCollapsed(false)}
-                    style={{ height: 44, overflowY: 'auto' }}
-                    className={cn(
-                      baseClasses,
-                      speechClass,
-                      removeFocusRings,
-                      'transition-[max-height] duration-200',
-                    )}
-                  />
-                </>
-              )}
-            </FileFormWrapper>
-            {SpeechToText && (
-              <AudioRecorder
-                isRTL={isRTL}
-                methods={methods}
-                ask={submitMessage}
+        <div className="flex w-full flex-col items-center">
+          <SharedPromptList
+            onSelectPrompt={submitPrompt}
+            className="w-full px-3 -mb-1"
+          />
+          <div className="flex w-full items-center">
+            {showPlusPopover && !isAssistantsEndpoint(endpoint) && (
+              <Mention
+                setShowMentionPopover={setShowPlusPopover}
+                newConversation={generateConversation}
                 textAreaRef={textAreaRef}
-                disabled={!!disableInputs}
-                isSubmitting={isSubmitting}
+                commandChar="+"
+                placeholder="com_ui_add_model_preset"
+                includeAssistants={false}
               />
             )}
-            {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
-          </div>
-          <div
-            className={cn(
-              'mb-[5px] ml-[8px] flex flex-col items-end justify-end',
-              isRTL && 'order-first mr-[8px]',
+            {showMentionPopover && (
+              <Mention
+                setShowMentionPopover={setShowMentionPopover}
+                newConversation={newConversation}
+                textAreaRef={textAreaRef}
+              />
             )}
-            style={{ alignSelf: 'flex-end' }}
-          >
-            {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
-              <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />
-            ) : (
-              endpoint && (
-                <SendButton
-                  ref={submitButtonRef}
-                  control={methods.control}
-                  disabled={!!(filesLoading || isSubmitting || disableInputs)}
+            <PromptsCommand index={index} textAreaRef={textAreaRef} submitPrompt={submitPrompt} />
+            <div className="transitional-all relative flex w-full flex-grow flex-col overflow-hidden rounded-3xl bg-surface-tertiary text-text-primary duration-200">
+              <TemporaryChat
+                isTemporaryChat={isTemporaryChat}
+                setIsTemporaryChat={setIsTemporaryChat}
+              />
+              <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
+              <FileFormWrapper disableInputs={disableInputs}>
+                {endpoint && (
+                  <>
+                    <CollapseChat
+                      isCollapsed={isCollapsed}
+                      isScrollable={isScrollable}
+                      setIsCollapsed={setIsCollapsed}
+                    />
+                    <TextareaAutosize
+                      {...registerProps}
+                      ref={(e) => {
+                        ref(e);
+                        textAreaRef.current = e;
+                      }}
+                      disabled={disableInputs}
+                      onPaste={handlePaste}
+                      onKeyDown={handleKeyDown}
+                      onKeyUp={handleKeyUp}
+                      onHeightChange={() => {
+                        if (textAreaRef.current) {
+                          const scrollable = checkIfScrollable(textAreaRef.current);
+                          setIsScrollable(scrollable);
+                        }
+                      }}
+                      onCompositionStart={handleCompositionStart}
+                      onCompositionEnd={handleCompositionEnd}
+                      id={mainTextareaId}
+                      tabIndex={0}
+                      data-testid="text-input"
+                      rows={1}
+                      onFocus={() => isCollapsed && setIsCollapsed(false)}
+                      onClick={() => isCollapsed && setIsCollapsed(false)}
+                      style={{ height: 44, overflowY: 'auto' }}
+                      className={cn(
+                        baseClasses,
+                        speechClass,
+                        removeFocusRings,
+                        'transition-[max-height] duration-200',
+                      )}
+                    />
+                  </>
+                )}
+              </FileFormWrapper>
+              {SpeechToText && (
+                <AudioRecorder
+                  isRTL={isRTL}
+                  methods={methods}
+                  ask={submitMessage}
+                  textAreaRef={textAreaRef}
+                  disabled={!!disableInputs}
+                  isSubmitting={isSubmitting}
                 />
-              )
-            )}
+              )}
+              {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
+            </div>
+            <div
+              className={cn(
+                'mb-[5px] ml-[8px] flex flex-col items-end justify-end',
+                isRTL && 'order-first mr-[8px]',
+              )}
+              style={{ alignSelf: 'flex-end' }}
+            >
+              {(isSubmitting || isSubmittingAdded) && (showStopButton || showStopAdded) ? (
+                <StopButton stop={handleStopGenerating} setShowStopButton={setShowStopButton} />
+              ) : (
+                endpoint && (
+                  <SendButton
+                    ref={submitButtonRef}
+                    control={methods.control}
+                    disabled={!!(filesLoading || isSubmitting || disableInputs)}
+                  />
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>
