@@ -50,6 +50,13 @@
 
 - 🖥️ **UI & Experience** inspired by ChatGPT with enhanced design and features
 
+- 💼 **Business Actions**:
+
+  - Contextual action buttons displayed above AI responses
+  - Integration with external services based on conversation context
+  - Built-in support for movie recommendations via TMDB
+  - Extensible provider system for custom actions
+
 - 🤖 **AI Model Selection**:
 
   - Anthropic (Claude), AWS Bedrock, OpenAI, Azure OpenAI, Google, Vertex AI, OpenAI Assistants API (incl. Azure)
@@ -219,6 +226,64 @@ We thank [Locize](https://locize.com) for their translation management tools tha
 <h2>
   OMNIVENTUS CHANGES
 </h2>
+# Business Actions Setup
+
+Business Actions enable LibreChat to display contextual action buttons above AI responses. These actions provide users with quick ways to interact with external systems based on the context of their conversation.
+
+## Configuring Business Actions
+
+Business Actions are powered by specialized providers that can be configured in LibreChat. Currently, the following providers are available:
+
+1. **Search Actions Provider** - General search-related actions
+2. **Movie Actions Provider** - Movie-related actions using The Movie Database API
+
+### Movie Actions Provider Setup
+
+The Movie Actions Provider requires an API key from The Movie Database (TMDB). Follow these steps to set up:
+
+1. Create a TMDB account at [https://www.themoviedb.org/signup](https://www.themoviedb.org/signup)
+2. Go to your account settings and navigate to the API section
+3. Create a new API key by following their process (typically requires providing basic application information)
+4. Once you have the API key, add it to your `.env` file:
+
+```
+# TMDB API key for movie-related business actions
+TMDB_API_KEY=your_api_key_here
+```
+
+5. Restart your LibreChat instance for the changes to take effect
+
+## Testing Business Actions
+
+### Movie Actions
+
+To test the Movie Actions provider, try asking the AI questions that contain movie-related terms, such as:
+
+- "Recommend a movie about space"
+- "What are some good action movies?"
+- "Find films with Tom Hanks"
+- "Suggest a movie to watch tonight"
+
+You should see contextual actions appear above the AI's response with links to relevant movies on TMDB.
+
+## Creating Custom Providers
+
+You can create your own business actions providers by:
+
+1. Creating a new file in `api/server/services/actions/` following the pattern of existing providers
+2. Implementing the required `getActions` method
+3. Registering your provider in `api/server/services/initBusinessActions.js`
+
+See the `MovieActionsProvider.js` file for a comprehensive example of implementing a provider.
+
+## Troubleshooting
+
+If business actions are not appearing:
+
+1. Check your server logs for any errors related to business actions providers
+2. Verify that your API keys are correctly set in the `.env` file
+3. Make sure your query contains terms that would trigger the relevant provider
+4. Confirm that the provider is properly registered in `initBusinessActions.js`
 
 to see live changes on the front go to http://localhost:3090/
 
@@ -230,13 +295,115 @@ to see live changes on the front go to http://localhost:3090/
   - add simple user administration interface for users of type admin
   - add for admin, an interface to add shared files to the file library
 
-let's implement in the sidePanel Nav a new button to access a simple user administration page.
+todo:
 
-the page should be on the endpoind /d/users/\* with a children route on /d/users/:userId. that route configuration should be in the dashboardRoutes.
+display file scope in the file manager
 
-add a new PermissionTypes (USER_ADMIN) and a new Permission 'DELETE'
-update the useSideNavLinks hook to add a two const to check user access to USER_ADMIN and the ability to Delete user. if user has access to USER_ADMIN push a links with a localized title 'User admin'.
+improvements:
 
-the user admin button should copy on the FilesPanel design, with a panelTable a little like the one for Files.
+- put users in recoil state (not priority)
+- supprimer l'option pour ajouter des utilisateurs
+- add a button to force the update of the preloaded files
+- show token usage for each user in the admin interface but also in the main view (user/:id page)
+- bien gerer la suppression d'un utilisateur par rapport à ses fichiers
 
-you will then create a data-provider for users in client/src/data-provider/Users following the same file conventions as the over data providers.
+there is an error when i submit request: failed to fetch models from Mistral API , the server responded with status 401 but i am using ollama.
+
+add new en var FILE_ACCESS_GROUPS
+
+- limit prompt creation to admin only
+- display prompt in chip format above the chat
+- visualy increase user balance limit
+- add granularity to some interfaces features (prompt, preset, bookmark, agent)
+  be able to deactive some features only for some roles (admin, manager, user)
+  endpointsMenu: true
+  modelSelect: true
+  parameters: true
+  sidePanel: true
+  presets: true
+  prompts: true
+  bookmarks: true
+  multiConvo: true
+  agents: true
+
+  - revalidate the prompts to get shared promps above the chat when a new prompt is created.
+
+  - use authentication from another source (sql external database)
+  - add ability to have files in the prompt
+
+generate a diagram of the project structure
+mmdc -i archi.md -o output.pdf
+
+read the MessageRender.tsx file and it's related component to understand the behavior and flow of the message rendering in the librechat project.
+the goal is to find a way to display in the returned message section of a conversation a list of clickable elements (action button, links ) all displayed in a consistant simple card maner.
+
+we want to be able for some queries of the user, to display above the streamed response of the AI, some links, buttons that can redirect the user to business related location. the data in that section will come from another call to the backend that will be directly handled by non AI processes. let's call that additionnal data "contextual business actions data"
+
+think , review analyse the project structure and suggest the best way to save the contextual business actions data , and the best way to display it .
+break it down step by step (think about how to orchestrate the simulatneous fetch, how to save the data , both front end and backend , and how to do the display
+
+hubspot , sap , brevo or external api integration for business actions data.
+
+create a template email for a campaign to send to a list of contacts.
+create a gif demo of the usage of a key recurent feature
+
+## understand the streaming flow.
+
+The Complete Streaming Flow
+AskController calls client.sendMessage() with an onProgress callback
+The client connects to the AI API with streaming enabled
+As each token arrives from the AI:
+The client calls the onProgress callback with the token
+onProgress (created by createOnProgress) calls the utility sendMessage function
+The utility sendMessage formats and writes an SSE event to the response
+The frontend receives these events in real-time and updates the UI
+When the AI finishes generating:
+The client's sendMessage returns the complete response
+AskController sends a final SSE event with sendMessage(res, {..., final: true})
+AskController calls res.end() to close the connection
+This architecture allows LibreChat to stream tokens as they're generated, providing a real-time experience to users.
+
+## Agent Ideas and Use Cases
+
+### Sales Inquiry Agent
+
+Use Case: This agent can handle sales inquiries by providing information on products, checking stock availability, and engaging potential customers. It can also collect customer information for follow-up.
+
+### Marketing Content Generator
+
+Use Case: This agent can generate marketing copies, social media posts, and email newsletters based on user inputs, saving time for marketers.
+
+### Code Review Agent
+
+Use Case: It can help developers automatically review code snippets for best practices and common issues, provide explanations, and suggest improvements.
+
+### Document Assistant Agent
+
+Use Case: This agent can search for documents based on user queries and summarize or extract key points, aiding in project management or research.
+
+### Tech Support Agent
+
+Use Case: This agent can respond to tech support requests, troubleshoot common issues, and guide users through setup processes.
+
+### Data Dashboard Agent
+
+Use Case: This agent can generate visual reports and dashboards based on ongoing project data and KPIs, assisting in decision-making processes.
+
+### Social Media Monitoring Agent
+
+Monitors social media platforms for mentions
+Helps draft responses to comments/mentions
+
+### Customer Support Agent
+
+Handles customer inquiries and complaints
+Provides solutions to common issues
+
+when creating actions, make sure to add the domain to the allowed domains in the librechat.yaml file.
+
+notion json api:
+
+## improvements
+
+- sort prompt by category so that user can find them easily
+- create more categories for prompts

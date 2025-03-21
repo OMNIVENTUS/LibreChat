@@ -1,4 +1,4 @@
-import { ArrowUpDown, Trash2, UserCog } from 'lucide-react';
+import { ArrowUpDown, Trash2, UserCog, Shield } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TUser } from 'librechat-data-provider';
 import { Button } from '~/components/ui';
@@ -8,9 +8,10 @@ import { useLocalize } from '~/hooks';
 interface ColumnOptions {
   onDelete: (userId: string) => void;
   onUpdateAccessGroups: (user: TUser) => void;
+  onUpdateRole?: (user: TUser) => void;
 }
 
-export const columns = ({ onDelete, onUpdateAccessGroups }: ColumnOptions): ColumnDef<TUser>[] => {
+export const columns = ({ onDelete, onUpdateAccessGroups, onUpdateRole }: ColumnOptions): ColumnDef<TUser>[] => {
   const localize = useLocalize();
 
   return [
@@ -111,6 +112,17 @@ export const columns = ({ onDelete, onUpdateAccessGroups }: ColumnOptions): Colu
       cell: ({ row }) => {
         return (
           <div className="flex items-center justify-end gap-2">
+            {onUpdateRole && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onUpdateRole(row.original)}
+                className="h-8 w-8 p-0"
+                aria-label={localize('com_users_edit_role')}
+              >
+                <Shield className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"

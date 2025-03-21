@@ -16,6 +16,7 @@ import type { TResData } from '~/common';
 import { useGenTitleMutation, useGetStartupConfig, useGetUserBalance } from '~/data-provider';
 import { useAuthContext } from '~/hooks/AuthContext';
 import useEventHandlers from './useEventHandlers';
+import useBusinessActionsHandler from './useBusinessActionsHandler';
 import store from '~/store';
 
 type ChatHelpers = Pick<
@@ -74,6 +75,8 @@ export default function useSSE(
     resetLatestMessage,
   });
 
+  const businessActionsHandler = useBusinessActionsHandler();
+
   const { data: startupConfig } = useGetStartupConfig();
   const balanceQuery = useGetUserBalance({
     enabled: !!isAuthenticated && startupConfig?.checkBalance,
@@ -105,6 +108,16 @@ export default function useSSE(
         attachmentHandler({ data, submission: submission as EventSubmission });
       } catch (error) {
         console.error(error);
+      }
+    });
+
+    sse.addEventListener('business_actions', (e: MessageEvent) => {
+      try {
+
+        const data = JSON.parse(e.data);
+        businessActionsHandler({ data, submission: submission as EventSubmission });
+      } catch (error) {
+        console.error('[BusinessActions] Error processing business actions:', error);
       }
     });
 
@@ -234,6 +247,6 @@ export default function useSSE(
         sse.dispatchEvent(e);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [submission]);
 }

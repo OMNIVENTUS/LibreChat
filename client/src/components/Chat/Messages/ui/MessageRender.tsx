@@ -1,5 +1,5 @@
 import { useRecoilValue } from 'recoil';
-import { useCallback, useMemo, memo } from 'react';
+import { useCallback, useMemo, memo, useState } from 'react';
 import type { TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon } from '~/common';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
@@ -13,6 +13,9 @@ import { MessageContext } from '~/Providers';
 import { useMessageActions } from '~/hooks';
 import { cn, logger } from '~/utils';
 import store from '~/store';
+import BusinessActionsCard from './BusinessActionsCard';
+
+// Define the extended message shape with contextual actions
 
 type MessageRenderProps = {
   message?: TMessage;
@@ -85,6 +88,10 @@ const MessageRender = memo(
         msg?.isCreatedByUser,
       ],
     );
+
+    // Cast msg to any to safely access contextualActions without TypeScript errors
+    // We're doing this because TMessage doesn't include contextualActions
+    const extMsg = msg as any;
 
     if (!msg) {
       return null;
@@ -164,9 +171,18 @@ const MessageRender = memo(
                 value={{
                   messageId: msg.messageId,
                   conversationId: conversation?.conversationId,
+                  isExpanded: true,
                 }}
               >
                 {msg.plugin && <Plugin plugin={msg.plugin} />}
+
+                {/* Display business actions if available or loading - Business Actions Card will handle displaying nothing if neither condition is true */}
+                <BusinessActionsCard
+                  actions={extMsg?.contextualActions || []}
+                  messageId={msg?.messageId}
+                  isLoading={false}
+                />
+
                 <MessageContent
                   ask={ask}
                   edit={edit}

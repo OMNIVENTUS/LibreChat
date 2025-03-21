@@ -140,13 +140,13 @@ async function updateAccessPermissions(roleName, permissionsUpdate) {
 
 /**
  * Initialize default roles in the system.
- * Creates the default roles (ADMIN, USER) if they don't exist in the database.
+ * Creates the default roles (ADMIN, USER, Manager) if they don't exist in the database.
  * Updates existing roles with new permission types if they're missing.
  *
  * @returns {Promise<void>}
  */
 const initializeRoles = async function () {
-  const defaultRoles = [SystemRoles.ADMIN, SystemRoles.USER];
+  const defaultRoles = [SystemRoles.ADMIN, SystemRoles.USER, SystemRoles.MANAGER];
 
   for (const roleName of defaultRoles) {
     let role = await Role.findOne({ name: roleName });

@@ -9,6 +9,10 @@ export enum SystemRoles {
    */
   ADMIN = 'ADMIN',
   /**
+   * The Manager role - between Admin and User
+   */
+  MANAGER = 'MANAGER',
+  /**
    * The default user role
    */
   USER = 'USER',
@@ -150,6 +154,37 @@ const defaultRolesSchema = z.object({
       [Permissions.DELETE]: z.boolean().default(true),
     }),
   }),
+  [SystemRoles.MANAGER]: roleSchema.extend({
+    name: z.literal(SystemRoles.MANAGER),
+    [PermissionTypes.PROMPTS]: promptPermissionsSchema.extend({
+      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.CREATE]: z.boolean().default(true),
+      // [Permissions.SHARE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.BOOKMARKS]: bookmarkPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.AGENTS]: agentPermissionsSchema.extend({
+      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.CREATE]: z.boolean().default(true),
+      // [Permissions.SHARE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.RUN_CODE]: runCodePermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.DELETE]: z.boolean().default(true),
+    }),
+  }),
   [SystemRoles.USER]: roleSchema.extend({
     name: z.literal(SystemRoles.USER),
     [PermissionTypes.PROMPTS]: promptPermissionsSchema,
@@ -165,6 +200,16 @@ const defaultRolesSchema = z.object({
 export const roleDefaults = defaultRolesSchema.parse({
   [SystemRoles.ADMIN]: {
     name: SystemRoles.ADMIN,
+    [PermissionTypes.PROMPTS]: {},
+    [PermissionTypes.BOOKMARKS]: {},
+    [PermissionTypes.AGENTS]: {},
+    [PermissionTypes.MULTI_CONVO]: {},
+    [PermissionTypes.TEMPORARY_CHAT]: {},
+    [PermissionTypes.RUN_CODE]: {},
+    [PermissionTypes.USER_ADMIN]: {},
+  },
+  [SystemRoles.MANAGER]: {
+    name: SystemRoles.MANAGER,
     [PermissionTypes.PROMPTS]: {},
     [PermissionTypes.BOOKMARKS]: {},
     [PermissionTypes.AGENTS]: {},

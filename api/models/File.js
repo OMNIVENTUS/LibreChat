@@ -20,7 +20,6 @@ const findFileById = async (file_id, options = {}) => {
  * @returns {Promise<Array<MongoFile>>} Array of accessible files
  */
 const getFiles = async (filter, options = {}) => {
-
   const { user } = options;
   //handle access groups only if user is defined
   const accessGroups = [
@@ -38,9 +37,16 @@ const getFiles = async (filter, options = {}) => {
       },
     },
   ];
+
   if (user?.id) {
     OrFilter.push({ user: user.id });
   }
+
+  // Allow admins and managers to access all shared files
+  if (user?.role === 'ADMIN' || user?.role === 'MANAGER') {
+    OrFilter.push({ scope: 'shared' });
+  }
+
   const scopeFilter = {
     $or: OrFilter,
   };
