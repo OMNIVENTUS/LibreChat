@@ -69,7 +69,7 @@ export const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
 
     // Variant classes with improved contrast and visibility
     const variantClasses = {
-      default: 'bg-gray-200 text-gray-800 border border-gray-300 hover:bg-gray-300',
+      default: 'bg-surface-secondary text-primary border border-border-light hover:bg-surface-hover',
       primary: 'bg-primary-500 text-white border border-primary-600 hover:bg-primary-600',
       secondary: 'bg-secondary-100 text-secondary-800 border border-secondary-200 hover:bg-secondary-200',
       outline: 'bg-transparent border border-gray-300 text-gray-800 hover:bg-gray-100',
@@ -82,7 +82,7 @@ export const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
           'inline-flex items-center gap-1 rounded-full transition-colors shadow-sm mb-2',
           sizeClasses[size],
           variantClasses[variant],
-          selected && 'bg-primary-500 text-white border-primary-600',
+          selected && 'bg-primary-500 text-primary-fg border-primary-600',
           disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
           isClickable && 'cursor-pointer',
           className,
