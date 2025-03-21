@@ -29,14 +29,20 @@ function createContextHandlers(req, userMessageContent) {
         },
       });
     }
+    //if file has scope shared, we need to use the public entity_id
+    const body = {
+      file_id: file.file_id,
+      query: userMessageContent,
+      k: 4,
+    };
+
+    if (file.scope === 'shared') {
+      body.entity_id = 'public';
+    }
 
     return axios.post(
       `${process.env.RAG_API_URL}/query`,
-      {
-        file_id: file.file_id,
-        query: userMessageContent,
-        k: 4,
-      },
+      body,
       {
         headers: {
           Authorization: `Bearer ${jwtToken}`,
@@ -47,6 +53,7 @@ function createContextHandlers(req, userMessageContent) {
   };
 
   const processFile = async (file) => {
+
     if (file.embedded && !processedIds.has(file.file_id)) {
       try {
         const promise = query(file);
@@ -60,6 +67,7 @@ function createContextHandlers(req, userMessageContent) {
   };
 
   const createContext = async () => {
+
     try {
       if (!queryPromises.length || !processedFiles.length) {
         return '';

@@ -25,7 +25,14 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const files = await getFiles({ user: req.user.id });
+    const files = await getFiles(
+      {
+
+      },
+      {
+        user: req.user,
+      },
+    );
     res.status(200).send(files);
   } catch (error) {
     logger.error('[/files] Error getting files:', error);
@@ -68,10 +75,22 @@ router.delete('/', async (req, res) => {
     }
 
     const fileIds = files.map((file) => file.file_id);
-    const dbFiles = await getFiles({ file_id: { $in: fileIds } });
-    const unauthorizedFiles = dbFiles.filter((file) => file.user.toString() !== req.user.id);
 
+    const dbFiles = await getFiles({ file_id: { $in: fileIds } });
+
+    if (dbFiles.length === 0) {
+      logger.error(
+        `[/files] Files not found: ${files
+          .filter((f) => f.file_id)
+          .map((f) => f.file_id)
+          .join(', ')}`,
+      );
+      return res.status(404).json({ message: 'Files not found' });
+    }
+    const unauthorizedFiles = dbFiles.filter((file) => (file.user.toString() !== req.user.id && req.user.role !== 'admin'));
+    //TODO: check if the file is shared with the group and if so, check if the user is an admin
     if (unauthorizedFiles.length > 0) {
+      logger.error('You can only delete your own files');
       return res.status(403).json({
         message: 'You can only delete your own files',
         unauthorizedFiles: unauthorizedFiles.map((f) => f.file_id),

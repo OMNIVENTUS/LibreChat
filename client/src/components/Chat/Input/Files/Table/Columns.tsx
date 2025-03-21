@@ -1,5 +1,4 @@
-
-import { ArrowUpDown, Database } from 'lucide-react';
+import { ArrowUpDown, Database, Users } from 'lucide-react';
 import { FileSources, FileContext } from 'librechat-data-provider';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TFile } from 'librechat-data-provider';
@@ -17,6 +16,8 @@ const contextMap: Record<any, TranslationKeys> = {
   [FileContext.image_generation]: 'com_ui_image_gen',
   [FileContext.assistants_output]: 'com_ui_assistants_output',
   [FileContext.message_attachment]: 'com_ui_attachment',
+  [FileContext.preload]: 'com_files_preload',
+  [FileContext.shared]: 'com_files_shared',
 };
 
 export const columns: ColumnDef<TFile>[] = [
@@ -210,6 +211,32 @@ export const columns: ColumnDef<TFile>[] = [
       }
 
       return `${value}${suffix}`;
+    },
+  },
+  {
+    accessorKey: 'access_control',
+    header: ({ column }) => {
+      const localize = useLocalize();
+      return (
+        <SortFilterHeader
+          column={column}
+          title={localize('com_users_access_groups')}
+          filters={{
+            Groups: column.getFacetedUniqueValues().size > 0
+              ? Array.from(column.getFacetedUniqueValues().keys()).filter(Boolean)
+              : ['global'],
+          }}
+        />
+      );
+    },
+    cell: ({ row }) => {
+      const { access_control } = row.original;
+      return (
+        <div className="flex flex-wrap items-center gap-2">
+          <Users className="icon-sm text-zinc-500" />
+          <span>{access_control?.length ? access_control.filter((group) => group !== 'admin').join(', ') : 'global'}</span>
+        </div>
+      );
     },
   },
 ];

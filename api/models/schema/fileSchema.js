@@ -26,6 +26,8 @@ const mongoose = require('mongoose');
  * @property {Date} [expiresAt] - Optional expiration date of the file
  * @property {Date} [createdAt] - Date when the file was created
  * @property {Date} [updatedAt] - Date when the file was updated
+ * @property {string} scope - Scope of the file
+ * @property {string[]} access_control - Access control list for the file
  */
 
 /** @type {MongooseSchema<MongoFile>} */
@@ -99,6 +101,17 @@ const fileSchema = mongoose.Schema(
     expiresAt: {
       type: Date,
       expires: 3600, // 1 hour in seconds
+    },
+    scope: {
+      type: String,
+      enum: ['private', 'public', 'shared'],
+      default: 'private',
+    },
+    access_control: {
+      type: [{
+        type: String, // user IDs or role names
+      }],
+      default: [],
     },
   },
   {

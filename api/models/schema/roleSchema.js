@@ -60,6 +60,16 @@ const roleSchema = new mongoose.Schema({
       default: true,
     },
   },
+  [PermissionTypes.USER_ADMIN]: {
+    [Permissions.USE]: {
+      type: Boolean,
+      default: false,
+    },
+    [Permissions.DELETE]: {
+      type: Boolean,
+      default: false,
+    },
+  },
 });
 
 const Role = mongoose.model('Role', roleSchema);

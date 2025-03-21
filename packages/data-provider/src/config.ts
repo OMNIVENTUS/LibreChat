@@ -509,6 +509,7 @@ export type TStartupConfig = {
   publicSharedLinksEnabled: boolean;
   analyticsGtmId?: string;
   instanceProjectId: string;
+  fileAccessGroups?: string[];
 };
 
 export const configSchema = z.object({

@@ -4,6 +4,7 @@ const availableTools = require('./manifest.json');
 const DALLE3 = require('./structured/DALLE3');
 const OpenWeather = require('./structured/OpenWeather');
 const createYouTubeTools = require('./structured/YouTube');
+const createNotionTools = require('./structured/Notion');
 const StructuredWolfram = require('./structured/Wolfram');
 const StructuredACS = require('./structured/AzureAISearch');
 const StructuredSD = require('./structured/StableDiffusion');
@@ -37,5 +38,6 @@ module.exports = {
   TraversaalSearch,
   StructuredWolfram,
   createYouTubeTools,
+  createNotionTools,
   TavilySearchResults,
 };
