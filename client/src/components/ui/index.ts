@@ -2,6 +2,7 @@ export * from './AlertDialog';
 export * from './Breadcrumb';
 export * from './Button';
 export * from './Checkbox';
+export * from './Chip';
 export * from './DataTableColumnHeader';
 export * from './Dialog';
 export * from './DropdownMenu';
@@ -40,3 +41,10 @@ export { default as InputWithDropdown } from './InputWithDropDown';
 export { default as SelectDropDownPop } from './SelectDropDownPop';
 export { default as AnimatedSearchInput } from './AnimatedSearchInput';
 export { default as MultiSelectDropDown } from './MultiSelectDropDown';
+export {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './Select';

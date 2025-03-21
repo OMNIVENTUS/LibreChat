@@ -1,7 +1,7 @@
 import React from 'react';
 import { useMessageProcess } from '~/hooks';
 import type { TMessageProps } from '~/common';
-// eslint-disable-next-line import/no-cycle
+
 import MultiMessage from '~/components/Chat/Messages/MultiMessage';
 import ContentRender from './ContentRender';
 
@@ -65,7 +65,7 @@ export default function MessageContent(props: TMessageProps) {
           </div>
         ) : (
           <div className="m-auto justify-center p-4 py-2 md:gap-6 ">
-            <ContentRender {...props} />
+            <ContentRender {...props} isSubmittingFamily={isSubmittingFamily} />
           </div>
         )}
       </MessageContainer>

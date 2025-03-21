@@ -488,6 +488,16 @@ export const tMessageSchema = z.object({
   unfinished: z.boolean().optional(),
   searchResult: z.boolean().optional(),
   finish_reason: z.string().optional(),
+  contextualActions: z.array(z.object({
+    type: z.string(),
+    label: z.string(),
+    url: z.string().optional(),
+    actionId: z.string().optional(),
+    icon: z.string().optional(),
+    style: z.string().optional(),
+  }),
+  ).optional(),
+
   /* assistant */
   thread_id: z.string().optional(),
   /* frontend components */

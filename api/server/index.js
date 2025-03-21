@@ -18,6 +18,7 @@ const validateImageRequest = require('./middleware/validateImageRequest');
 const errorController = require('./controllers/ErrorController');
 const configureSocialLogins = require('./socialLogins');
 const AppService = require('./services/AppService');
+const initBusinessActions = require('./services/initBusinessActions');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const routes = require('./routes');
@@ -39,6 +40,9 @@ const startServer = async () => {
   const app = express();
   app.disable('x-powered-by');
   await AppService(app);
+
+  // Initialize business actions providers
+  initBusinessActions();
 
   const indexPath = path.join(app.locals.paths.dist, 'index.html');
   const indexHTML = fs.readFileSync(indexPath, 'utf8');
@@ -110,6 +114,7 @@ const startServer = async () => {
   app.use('/api/agents', routes.agents);
   app.use('/api/banner', routes.banner);
   app.use('/api/bedrock', routes.bedrock);
+  app.use('/api/users', routes.users);
 
   app.use('/api/tags', routes.tags);
 

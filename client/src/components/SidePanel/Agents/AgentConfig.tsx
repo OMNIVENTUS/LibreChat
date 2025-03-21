@@ -404,7 +404,8 @@ export default function AgentConfig({
             </div>
           </div>
         </div>
-        {user?.role === SystemRoles.ADMIN && <AdminSettings />}
+        {/* Admin Settings */}
+        {(user?.role === SystemRoles.ADMIN || user?.role === SystemRoles.MANAGER) && <AdminSettings />}
         {/* Context Button */}
         <div className="flex items-center justify-end gap-2">
           <DeleteButton
@@ -412,7 +413,7 @@ export default function AgentConfig({
             setCurrentAgentId={setCurrentAgentId}
             createMutation={create}
           />
-          {(agent?.author === user?.id || user?.role === SystemRoles.ADMIN) &&
+          {(agent?.author === user?.id || user?.role === SystemRoles.ADMIN || user?.role === SystemRoles.MANAGER) &&
             hasAccessToShareAgents && (
             <ShareAgent
               agent_id={agent_id}

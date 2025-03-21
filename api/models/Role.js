@@ -10,10 +10,12 @@ const {
   bookmarkPermissionsSchema,
   multiConvoPermissionsSchema,
   temporaryChatPermissionsSchema,
+  userAdminPermissionsSchema,
 } = require('librechat-data-provider');
 const getLogStores = require('~/cache/getLogStores');
 const Role = require('~/models/schema/roleSchema');
 const { logger } = require('~/config');
+const lodash = require('lodash');
 
 /**
  * Retrieve a role by name and convert the found role document to a plain object.
@@ -81,6 +83,7 @@ const permissionSchemas = {
   [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema,
   [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema,
   [PermissionTypes.RUN_CODE]: runCodePermissionsSchema,
+  [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema,
 };
 
 /**
@@ -137,13 +140,13 @@ async function updateAccessPermissions(roleName, permissionsUpdate) {
 
 /**
  * Initialize default roles in the system.
- * Creates the default roles (ADMIN, USER) if they don't exist in the database.
+ * Creates the default roles (ADMIN, USER, Manager) if they don't exist in the database.
  * Updates existing roles with new permission types if they're missing.
  *
  * @returns {Promise<void>}
  */
 const initializeRoles = async function () {
-  const defaultRoles = [SystemRoles.ADMIN, SystemRoles.USER];
+  const defaultRoles = [SystemRoles.ADMIN, SystemRoles.USER, SystemRoles.MANAGER];
 
   for (const roleName of defaultRoles) {
     let role = await Role.findOne({ name: roleName });
@@ -153,14 +156,20 @@ const initializeRoles = async function () {
       role = new Role(roleDefaults[roleName]);
     } else {
       // Add missing permission types
+
       let isUpdated = false;
       for (const permType of Object.values(PermissionTypes)) {
-        if (!role[permType]) {
+
+        //compare the role with the default role
+        if (!role[permType] ||
+          !lodash.isEqual(JSON.stringify(role[permType]), JSON.stringify(roleDefaults[roleName][permType]))) {
+
           role[permType] = roleDefaults[roleName][permType];
           isUpdated = true;
         }
       }
       if (isUpdated) {
+
         await role.save();
       }
     }

@@ -2,7 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SystemRoles } from 'librechat-data-provider';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { ArrowLeft, MessageSquareQuote } from 'lucide-react';
+import { ArrowLeft, MessageSquareQuote, Users } from 'lucide-react';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,6 +24,7 @@ import { useDashboardContext } from '~/Providers';
 import store from '~/store';
 
 const promptsPathPattern = /prompts\/(?!new(?:\/|$)).*$/;
+const usersPathPattern = /users\/(?!new(?:\/|$)).*$/;
 
 const getConversationId = (prevLocationPath: string) => {
   if (!prevLocationPath || prevLocationPath.includes('/d/')) {
@@ -51,9 +52,15 @@ export default function DashBreadcrumb() {
 
   const chatLinkHandler = useCustomLink('/c/' + lastConversationId, clickCallback);
   const promptsLinkHandler = useCustomLink('/d/prompts');
+  const usersLinkHandler = useCustomLink('/d/users');
 
   const isPromptsPath = useMemo(
     () => promptsPathPattern.test(location.pathname),
+    [location.pathname],
+  );
+
+  const isUsersPath = useMemo(
+    () => location.pathname.includes('/d/users'),
     [location.pathname],
   );
 
@@ -94,19 +101,28 @@ export default function DashBreadcrumb() {
         */}
           <BreadcrumbItem className="hover:dark:text-white">
             <BreadcrumbLink
-              href="/d/prompts"
+              href={isUsersPath ? '/d/users' : '/d/prompts'}
               className="flex flex-row items-center gap-1"
-              onClick={promptsLinkHandler}
+              onClick={isUsersPath ? usersLinkHandler : promptsLinkHandler}
             >
-              <MessageSquareQuote className="h-4 w-4 dark:text-gray-300" aria-hidden="true" />
-              {localize('com_ui_prompts')}
+              {isUsersPath ? (
+                <>
+                  <Users className="h-4 w-4 dark:text-gray-300" aria-hidden="true" />
+                  {localize('com_users_title')}
+                </>
+              ) : (
+                <>
+                  <MessageSquareQuote className="h-4 w-4 dark:text-gray-300" aria-hidden="true" />
+                  {localize('com_ui_prompts')}
+                </>
+              )}
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <div className="flex items-center justify-center gap-2">
         {isPromptsPath && <AdvancedSwitch />}
-        {user?.role === SystemRoles.ADMIN && <AdminSettings />}
+        {(user?.role === SystemRoles.ADMIN || user?.role === SystemRoles.MANAGER) && <AdminSettings />}
       </div>
     </div>
   );

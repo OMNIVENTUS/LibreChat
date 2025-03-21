@@ -61,12 +61,20 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="/assets/logo.svg"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
-          />
+        <div className="flex flex-col items-center space-y-2">
+          <div className="mt-6 h-10 w-full bg-cover" aria-label="Logo container">
+            <img
+              src="/assets/logo.svg"
+              className="h-full w-full object-contain"
+              alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
+            />
+          </div>
+          <div
+            className="text-center text-sm sm:text-base text-gray-600 dark:text-gray-300"
+            aria-label="Welcome message"
+          >
+            {localize('com_auth_welcome_by')}
+          </div>
         </div>
       </BlinkAnimation>
       <DisplayError />
@@ -87,8 +95,8 @@ function AuthLayout({
           {children}
           {!pathname.includes('2fa') &&
             (pathname.includes('login') || pathname.includes('register')) && (
-            <SocialLoginRender startupConfig={startupConfig} />
-          )}
+              <SocialLoginRender startupConfig={startupConfig} />
+            )}
         </div>
       </div>
       <Footer startupConfig={startupConfig} />

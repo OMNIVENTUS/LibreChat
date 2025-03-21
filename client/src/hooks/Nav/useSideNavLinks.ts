@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { MessageSquareQuote, ArrowRightToLine, Settings2, Bookmark } from 'lucide-react';
+import { MessageSquareQuote, ArrowRightToLine, Settings2, Bookmark, Users } from 'lucide-react';
 import {
   isAssistantsEndpoint,
   isAgentsEndpoint,
@@ -18,6 +18,7 @@ import Parameters from '~/components/SidePanel/Parameters/Panel';
 import FilesPanel from '~/components/SidePanel/Files/Panel';
 import { Blocks, AttachmentIcon } from '~/components/svg';
 import { useHasAccess } from '~/hooks';
+import UsersPanel from '~/components/SidePanel/Users/Panel';
 
 export default function useSideNavLinks({
   hidePanel,
@@ -52,6 +53,15 @@ export default function useSideNavLinks({
     permissionType: PermissionTypes.AGENTS,
     permission: Permissions.CREATE,
   });
+  const hasAccessToUserAdmin = useHasAccess({
+    permissionType: PermissionTypes.USER_ADMIN,
+    permission: Permissions.USE,
+  });
+  const hasAccessToDeleteUsers = useHasAccess({
+    permissionType: PermissionTypes.USER_ADMIN,
+    permission: Permissions.DELETE,
+  });
+  //todo add hasAccessToUsersDashboard and hasAccessToDeleteUsers constants
 
   const Links = useMemo(() => {
     const links: NavLink[] = [];
@@ -129,6 +139,16 @@ export default function useSideNavLinks({
       });
     }
 
+    if (hasAccessToUserAdmin) {
+      links.push({
+        title: 'com_sidepanel_user_admin',
+        label: '',
+        icon: Users,
+        id: 'users',
+        Component: UsersPanel,
+      });
+    }
+
     links.push({
       title: 'com_sidepanel_hide_panel',
       label: '',
@@ -150,6 +170,7 @@ export default function useSideNavLinks({
     hasAccessToBookmarks,
     hasAccessToCreateAgents,
     hidePanel,
+    hasAccessToUserAdmin,
   ]);
 
   return Links;

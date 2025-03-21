@@ -11,7 +11,12 @@ const { loadAndFormatTools } = require('./ToolService');
 const { agentsConfigSetup } = require('./start/agents');
 const { initializeRoles } = require('~/models/Role');
 const { getMCPManager } = require('~/config');
+const { preloadFiles } = require('./Files/VectorDB');
 const paths = require('~/config/paths');
+
+const initializeServices = async () => {
+  await preloadFiles();
+};
 
 /**
  *
@@ -34,6 +39,8 @@ const AppService = async (app) => {
 
   checkVariables();
   await checkHealth();
+
+  initializeServices();
 
   if (fileStrategy === FileSources.firebase) {
     initializeFirebase();
