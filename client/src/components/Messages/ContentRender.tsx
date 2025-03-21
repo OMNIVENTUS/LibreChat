@@ -12,6 +12,7 @@ import { useMessageActions } from '~/hooks';
 import { cn, logger } from '~/utils';
 import store from '~/store';
 import BusinessActionsCard from '../Chat/Messages/ui/BusinessActionsCard';
+import has from 'lodash/has';
 
 type ContentRenderProps = {
   message?: TMessage;
@@ -71,9 +72,11 @@ const ContentRender = memo(
 
     // Show loading state for business actions when a new AI message is received
     // but doesn't yet have business actions
+    //add a check on existance of the key contextualActions
     const shouldShowActionsLoading =
       !msg?.isCreatedByUser &&
-      !hasBusinessActions;
+      !has(extMsg, 'contextualActions') &&
+      extMsg?.finish_reason === undefined;
 
     const isLast = useMemo(
       () =>

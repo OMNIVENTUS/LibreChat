@@ -167,6 +167,7 @@ class RequestConfig {
     readonly operation: string,
     readonly isConsequential: boolean,
     readonly contentType: string,
+    readonly defaultHeaders: Record<string, string> = {},
   ) {}
 }
 
@@ -174,24 +175,48 @@ class RequestExecutor {
   path: string;
   params?: object;
   private operationHash?: string;
+  private customHeaders: Record<string, string> = {};
   private authHeaders: Record<string, string> = {};
   private authToken?: string;
 
   constructor(private config: RequestConfig) {
     this.path = config.basePath;
+    this.customHeaders = { ...config.defaultHeaders };
+  }
+
+  setHeaders(headers: Record<string, string>) {
+    this.customHeaders = { ...this.customHeaders, ...headers };
+    return this;
   }
 
   setParams(params: object) {
     this.operationHash = sha1(JSON.stringify(params));
     this.params = Object.assign({}, params);
 
+    const headerParams: Record<string, string> = {};
+    const nonHeaderParams: Record<string, unknown> = {};
+
     for (const [key, value] of Object.entries(params)) {
+      if (key.startsWith('header_')) {
+        headerParams[key.substring(7)] = value as string;
+      } else {
+        nonHeaderParams[key] = value;
+      }
+    }
+
+    if (Object.keys(headerParams).length > 0) {
+      this.setHeaders(headerParams);
+    }
+
+    for (const [key, value] of Object.entries(nonHeaderParams)) {
       const paramPattern = `{${key}}`;
       if (this.path.includes(paramPattern)) {
         this.path = this.path.replace(paramPattern, encodeURIComponent(value as string));
-        delete (this.params as Record<string, unknown>)[key];
+        delete (nonHeaderParams as Record<string, unknown>)[key];
       }
     }
+
+    this.params = nonHeaderParams;
     return this;
   }
 
@@ -276,6 +301,7 @@ class RequestExecutor {
   async execute() {
     const url = createURL(this.config.domain, this.path);
     const headers = {
+      ...this.customHeaders,
       ...this.authHeaders,
       'Content-Type': this.config.contentType,
     };
@@ -312,8 +338,17 @@ export class ActionRequest {
     operation: string,
     isConsequential: boolean,
     contentType: string,
+    defaultHeaders: Record<string, string> = {},
   ) {
-    this.config = new RequestConfig(domain, path, method, operation, isConsequential, contentType);
+    this.config = new RequestConfig(
+      domain,
+      path,
+      method,
+      operation,
+      isConsequential,
+      contentType,
+      defaultHeaders,
+    );
   }
 
   // Add getters to maintain backward compatibility
@@ -414,6 +449,9 @@ export function openapiToFunction(
         required: [],
       };
 
+      // Store default headers for this operation
+      const defaultHeaders: Record<string, string> = {};
+
       if (operationObj.parameters) {
         for (const param of operationObj.parameters) {
           const paramObj = param as OpenAPIV3.ParameterObject;
@@ -421,13 +459,30 @@ export function openapiToFunction(
             { ...paramObj.schema } as OpenAPIV3.ReferenceObject | OpenAPIV3.SchemaObject,
             openapiSpec.components,
           );
-          parametersSchema.properties[paramObj.name] = resolvedSchema;
-          if (paramObj.required === true) {
-            parametersSchema.required.push(paramObj.name);
+
+          // Special handling for header parameters
+          if (paramObj.in === 'header') {
+            // If the header has a default value, add it to defaultHeaders
+            if (resolvedSchema.default !== undefined) {
+              defaultHeaders[paramObj.name] = String(resolvedSchema.default);
+            }
+
+            // Add the header parameter to the schema with 'header_' prefix to mark it as a header
+            parametersSchema.properties[`header_${paramObj.name}`] = resolvedSchema;
+            if (paramObj.required === true) {
+              parametersSchema.required.push(`header_${paramObj.name}`);
+            }
+          } else {
+            // Handle regular parameters (path, query, etc.) as before
+            parametersSchema.properties[paramObj.name] = resolvedSchema;
+            if (paramObj.required === true) {
+              parametersSchema.required.push(paramObj.name);
+            }
           }
         }
       }
 
+      // Handle request body as before
       if (operationObj.requestBody) {
         const requestBody = operationObj.requestBody as RequestBodyObject;
         const content = requestBody.content;
@@ -449,6 +504,7 @@ export function openapiToFunction(
       const functionSignature = new FunctionSignature(operationId, description, parametersSchema, isStrict);
       functionSignatures.push(functionSignature);
 
+      // Create ActionRequest with default headers
       const actionRequest = new ActionRequest(
         baseUrl,
         path,
@@ -456,6 +512,7 @@ export function openapiToFunction(
         operationId,
         !!(operationObj['x-openai-isConsequential'] ?? false),
         operationObj.requestBody ? 'application/json' : '',
+        defaultHeaders,  // Pass default headers to the ActionRequest
       );
 
       requestBuilders[operationId] = actionRequest;

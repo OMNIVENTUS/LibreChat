@@ -149,6 +149,11 @@ const AskController = async (req, res, next, initializeClient, addTitle) => {
           })}\n\n`);
           //}, 10000);
         } else {
+          res.write(`event: business_actions\ndata: ${JSON.stringify({
+            messageId: responseMessageId,
+            actions: [],
+            count: 0,
+          })}\n\n`);
           logger.debug('[AskController] No business actions generated');
         }
       } catch (error) {

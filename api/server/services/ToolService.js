@@ -16,7 +16,7 @@ const {
   validateAndParseOpenAPISpec,
 } = require('librechat-data-provider');
 const { processFileURL, uploadImageBuffer } = require('~/server/services/Files/process');
-const { createYouTubeTools, manifestToolMap, toolkits } = require('~/app/clients/tools');
+const { createYouTubeTools, manifestToolMap, toolkits, createNotionTools } = require('~/app/clients/tools');
 const { loadActionSets, createActionTool, domainParser } = require('./ActionService');
 const { getEndpointsConfig } = require('~/server/services/Config');
 const { recordUsage } = require('~/server/services/Threads');
@@ -98,7 +98,11 @@ function loadAndFormatTools({ directory, adminFilter = [], adminIncluded = [] })
   }
 
   /** Basic Tools; schema: { input: string } */
-  const basicToolInstances = [new Calculator(), ...createYouTubeTools({ override: true })];
+  const basicToolInstances = [
+    new Calculator(),
+    ...createYouTubeTools({ override: true }),
+    ...createNotionTools({ override: true }),
+  ];
   for (const toolInstance of basicToolInstances) {
     const formattedTool = formatToOpenAIAssistantTool(toolInstance);
     let toolName = formattedTool[Tools.function].name;

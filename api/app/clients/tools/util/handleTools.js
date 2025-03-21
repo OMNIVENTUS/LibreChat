@@ -16,6 +16,7 @@ const {
   TraversaalSearch,
   StructuredWolfram,
   createYouTubeTools,
+  createNotionTools,
   TavilySearchResults,
 } = require('../');
 const { primeFiles: primeCodeFiles } = require('~/server/services/Files/Code/process');
@@ -210,6 +211,11 @@ const loadTools = async ({
       const authFields = getAuthFields('youtube');
       const authValues = await loadAuthValues({ userId: user, authFields });
       return createYouTubeTools(authValues);
+    },
+    notion: async () => {
+      const authFields = getAuthFields('notion');
+      const authValues = await loadAuthValues({ userId: user, authFields });
+      return createNotionTools(authValues);
     },
   };
 
