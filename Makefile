@@ -1,7 +1,7 @@
 # LibreChat Makefile
 # This Makefile provides helpful commands for working with the LibreChat project
 
-.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user ngrok-setup ngrok-dev ngrok-check notion-test notion-test-db notion-create-page notion-create-db textgears-test
+.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user ngrok-setup ngrok-dev ngrok-check notion-test notion-test-db notion-create-page notion-create-db textgears-test docker-build docker-push docker-login deploy-prod deploy-prod-build setup-ssl
 
 # Default target
 help:
@@ -27,6 +27,15 @@ help:
 	@echo "make notion-create-page - Create a test page in Notion"
 	@echo "make notion-create-db - Create a content database in Notion"
 	@echo "make textgears-test - Test TextGears content analysis API"
+	@echo "make docker-build   - Build Docker image"
+	@echo "make docker-push    - Push Docker image to GitHub Container Registry"
+	@echo "make docker-login   - Log in to GitHub Container Registry"
+	@echo "make deploy-prod    - Deploy to production"
+	@echo "make deploy-prod-build - Build and deploy to production"
+	@echo "make setup-ssl      - Set up SSL certificates with Let's Encrypt"
+
+GITHUB_OWNER=lionelzoc
+SSL_EMAIL=lionel@omniventus.com
 
 # Installation
 install:
@@ -474,3 +483,52 @@ notion-create-db:
 frontend-stop:
 	@echo "Stopping frontend development server..."
 	@kill $(lsof -t -i:3090)
+
+# Docker deployment commands
+docker-build:
+	@echo "Building Docker image..."
+	docker build -t ghcr.io/$(GITHUB_OWNER)/librechat:latest -f Dockerfile.multi --target api-build .
+
+docker-push:
+	@echo "Pushing Docker image to GitHub Container Registry..."
+	docker push ghcr.io/$(GITHUB_OWNER)/librechat:latest
+
+docker-login:
+	@echo "Logging in to GitHub Container Registry..."
+	@if [ -z "$(GITHUB_TOKEN)" ]; then \
+		echo "Error: GITHUB_TOKEN environment variable is not set"; \
+		echo "Please set it with: export GITHUB_TOKEN=your_token_here"; \
+		echo "Get your token from: https://github.com/settings/tokens"; \
+		exit 1; \
+	fi
+	@echo "Using GITHUB_TOKEN from environment..."
+	@docker login ghcr.io -u $(shell echo $(GITHUB_OWNER) | tr '[:upper:]' '[:lower:]') --password-stdin <<< "$(GITHUB_TOKEN)"
+	@echo "Login successful!"
+
+deploy-prod:
+	@echo "Deploying to production..."
+	@echo "This will pull the latest image and restart the containers"
+	@echo "Make sure you've configured your .env file with MongoDB Atlas connection"
+	docker-compose -f docker-compose.production.yml pull
+	docker-compose -f docker-compose.production.yml up -d
+
+deploy-prod-build:
+	@echo "Building locally and deploying to production..."
+	make docker-build
+	make docker-push
+	make deploy-prod
+
+setup-ssl:
+	@echo "Setting up SSL certificates with Let's Encrypt..."
+	mkdir -p ./ssl
+	docker run --rm -p 80:80 -p 443:443 \
+		-v ./ssl:/etc/letsencrypt \
+		-v ./ssl-logs:/var/log/letsencrypt \
+		certbot/certbot certonly --standalone \
+		--agree-tos --email $(SSL_EMAIL) \
+		-d chat.omniventus.com
+	
+	@echo "Copying certificates to NGINX SSL directory..."
+	mkdir -p ./ssl
+	cp ./ssl/live/chat.omniventus.com/fullchain.pem ./ssl/
+	cp ./ssl/live/chat.omniventus.com/privkey.pem ./ssl/
