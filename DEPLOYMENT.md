@@ -138,12 +138,16 @@ The workflow:
 
 The Makefile includes commands for manual image building and deployment:
 
-- `make docker-build`: Build the Docker image locally
+- `make docker-build`: Build the Docker image locally for the current platform
+- `make docker-build-amd64`: Build the Docker image specifically for AMD64 platform (used by Digital Ocean)
+- `make docker-build-multi`: Build multi-platform Docker image for both AMD64 and ARM64
 - `make docker-push`: Push the Docker image to GitHub Container Registry
 - `make docker-login`: Log in to GitHub Container Registry
 - `make deploy-prod`: Deploy the latest image to production
-- `make deploy-prod-build`: Build, push, and deploy in one step
+- `make deploy-prod-build`: Build for AMD64, push, and deploy in one step
 - `make setup-ssl`: Set up SSL certificates using Let's Encrypt
+
+For Digital Ocean deployments, always use the `docker-build-amd64` command or `deploy-prod-build` to ensure platform compatibility.
 
 ## Troubleshooting
 
@@ -203,3 +207,78 @@ Regularly backup your MongoDB data and environment configuration.
 ## Support
 
 If you encounter issues with this deployment guide, please open an issue in the repository.
+
+## Platform Compatibility
+
+When deploying to Digital Ocean, you might encounter platform compatibility issues. Digital Ocean droplets typically run on AMD64 (x86_64) architecture, which requires Docker images that support this platform.
+
+### Handling Platform Compatibility Issues
+
+If you encounter errors like `no matching manifest for linux/amd64 in the manifest list entries`, try these solutions:
+
+1. **Specify platform in docker-compose.production.yml**:
+
+   ```yaml
+   services:
+     api:
+       image: ghcr.io/danny-avila/librechat:latest
+       platform: linux/amd64
+       # Other configuration...
+   ```
+
+2. **Use specific image versions known to support AMD64**:
+
+   - For NGINX: `nginx:1.25-alpine`
+   - For MeiliSearch: `getmeili/meilisearch:v1.5`
+   - For Postgres/Vector DB: `postgres:15-alpine`
+
+3. **Build multi-platform images in your GitHub Actions workflow**:
+   The included GitHub Actions workflow is configured to build images for both AMD64 and ARM64 architectures, making them compatible with various deployment environments.
+
+### Docker Build Disk Space Issues
+
+When building Docker images for LibreChat, you might encounter disk space errors like:
+
+```
+npm warn tar TAR_ENTRY_ERROR ENOSPC: no space left on device, write
+```
+
+This is because the Node.js dependencies are quite large. To resolve this:
+
+1. **Clean up Docker environment first**:
+
+   ```bash
+   make docker-cleanup
+   ```
+
+2. **Try the direct build method** (without buildx):
+
+   ```bash
+   make docker-build-amd64-direct
+   ```
+
+3. **Increase available disk space** on your build machine:
+
+   - On Docker Desktop, you can increase disk space in Settings → Resources → Disk image size
+   - On Linux servers, consider adding more disk space or cleaning up unused files
+
+4. **Build directly on Digital Ocean**:
+   If building locally continues to fail, you can build directly on your Digital Ocean droplet:
+
+   ```bash
+   # SSH into your Digital Ocean droplet
+   ssh root@your-droplet-ip
+
+   # Clone your repository
+   git clone https://github.com/your-username/LibreChat.git
+   cd LibreChat
+
+   # Build the image directly (no cross-compilation needed)
+   docker build -t ghcr.io/your-username/librechat:latest -f Dockerfile.multi --target api-build .
+
+   # Login to GitHub Container Registry
+   echo YOUR_GITHUB_PAT | docker login ghcr.io -u your-username --password-stdin
+
+   # Push the image
+   docker push ghcr.io/your-username/librechat:latest
+   ```

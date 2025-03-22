@@ -1,7 +1,7 @@
 # LibreChat Makefile
 # This Makefile provides helpful commands for working with the LibreChat project
 
-.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user ngrok-setup ngrok-dev ngrok-check notion-test notion-test-db notion-create-page notion-create-db textgears-test docker-build docker-push docker-login deploy-prod deploy-prod-build setup-ssl
+.PHONY: help install dev build test clean docker-dev docker-prod lint format update create-user ngrok-setup ngrok-dev ngrok-check notion-test notion-test-db notion-create-page notion-create-db textgears-test docker-build docker-push docker-login deploy-prod deploy-prod-build setup-ssl docker-cleanup
 
 # Default target
 help:
@@ -28,11 +28,15 @@ help:
 	@echo "make notion-create-db - Create a content database in Notion"
 	@echo "make textgears-test - Test TextGears content analysis API"
 	@echo "make docker-build   - Build Docker image"
+	@echo "make docker-build-amd64 - Build Docker image for AMD64 platform (for Digital Ocean)"
+	@echo "make docker-build-amd64-direct - Build AMD64 image without buildx (alternative method)"
+	@echo "make docker-build-multi - Build multi-platform Docker image (AMD64 + ARM64)"
 	@echo "make docker-push    - Push Docker image to GitHub Container Registry"
 	@echo "make docker-login   - Log in to GitHub Container Registry"
 	@echo "make deploy-prod    - Deploy to production"
-	@echo "make deploy-prod-build - Build and deploy to production"
+	@echo "make deploy-prod-build - Build for AMD64, push, and deploy in one step"
 	@echo "make setup-ssl      - Set up SSL certificates with Let's Encrypt"
+	@echo "make docker-cleanup - Clean up Docker environment to reclaim disk space"
 
 GITHUB_OWNER=lionelzoc
 SSL_EMAIL=lionel@omniventus.com
@@ -489,6 +493,51 @@ docker-build:
 	@echo "Building Docker image..."
 	docker build -t ghcr.io/$(GITHUB_OWNER)/librechat:latest -f Dockerfile.multi --target api-build .
 
+# Build for specific platform (AMD64 for Digital Ocean)
+docker-build-amd64:
+	@echo "Building Docker image for AMD64 platform (Digital Ocean)..."
+	@echo "Cleaning up Docker environment to free space..."
+	docker system prune -f
+	@echo "Creating optimized builder with more disk space..."
+	docker buildx rm multiplatform-builder || true
+	docker buildx create --name multiplatform-builder --use --bootstrap \
+		--driver docker-container \
+		--driver-opt image=moby/buildkit:master \
+		--driver-opt network=host
+	@echo "Building image for AMD64 platform..."
+	docker buildx build --platform linux/amd64 \
+		--memory=4g \
+		--output type=docker \
+		-t ghcr.io/$(GITHUB_OWNER)/librechat:latest \
+		-f Dockerfile.multi --target api-build .
+
+# Alternative AMD64 build using direct Docker (no buildx)
+docker-build-amd64-direct:
+	@echo "Building Docker image for AMD64 platform using direct build..."
+	@echo "This method doesn't use buildx and may work better on some systems."
+	@echo "Cleaning up Docker environment to free space..."
+	docker system prune -f
+	@echo "Building image directly (non-cross-platform build)..."
+	docker build -t ghcr.io/$(GITHUB_OWNER)/librechat:latest -f Dockerfile.multi --target api-build .
+
+# Build for multiple platforms
+docker-build-multi:
+	@echo "Building multi-platform Docker image (AMD64, ARM64)..."
+	@echo "Cleaning up Docker environment to free space..."
+	docker system prune -f
+	@echo "Creating optimized builder with more disk space..."
+	docker buildx rm multiplatform-builder || true
+	docker buildx create --name multiplatform-builder --use --bootstrap \
+		--driver docker-container \
+		--driver-opt image=moby/buildkit:master \
+		--driver-opt network=host
+	@echo "Building multi-platform image and pushing directly to registry..."
+	docker buildx build --platform linux/amd64,linux/arm64 \
+		--memory=4g \
+		-t ghcr.io/$(GITHUB_OWNER)/librechat:latest \
+		-f Dockerfile.multi --target api-build \
+		--push .
+
 docker-push:
 	@echo "Pushing Docker image to GitHub Container Registry..."
 	docker push ghcr.io/$(GITHUB_OWNER)/librechat:latest
@@ -514,7 +563,7 @@ deploy-prod:
 
 deploy-prod-build:
 	@echo "Building locally and deploying to production..."
-	make docker-build
+	make docker-build-amd64
 	make docker-push
 	make deploy-prod
 
@@ -532,3 +581,14 @@ setup-ssl:
 	mkdir -p ./ssl
 	cp ./ssl/live/chat.omniventus.com/fullchain.pem ./ssl/
 	cp ./ssl/live/chat.omniventus.com/privkey.pem ./ssl/
+
+# Docker cleanup helper
+docker-cleanup:
+	@echo "Cleaning up Docker environment to reclaim disk space..."
+	@echo "This will remove unused containers, networks, images, and build cache"
+	docker system prune -a -f
+	@echo "Removing buildx builder instance if it exists..."
+	docker buildx rm multiplatform-builder || true
+	@echo "Docker cleanup complete!"
+	@echo "Available disk space:"
+	df -h

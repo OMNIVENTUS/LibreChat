@@ -1,6 +1,7 @@
 services:
   api:
     image: ghcr.io/lionelzoc/librechat:latest
+    platform: linux/amd64
     container_name: LibreChat-API
     restart: always
     ports:
@@ -23,7 +24,8 @@ services:
       - rag_api
 
   client:
-    image: nginx:1.27.0-alpine
+    image: nginx:1.25-alpine
+    platform: linux/amd64
     container_name: LibreChat-NGINX
     restart: always
     ports:
@@ -37,17 +39,19 @@ services:
 
   meilisearch:
     container_name: chat-meilisearch
-    image: getmeili/meilisearch:v1.12.3
+    image: getmeili/meilisearch:v1.5
+    platform: linux/amd64
     restart: always
     environment:
       - MEILI_HOST=http://meilisearch:7700
       - MEILI_NO_ANALYTICS=true
       - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
     volumes:
-      - ./meili_data_v1.12:/meili_data
+      - ./meili_data:/meili_data
 
   vectordb:
     image: ankane/pgvector:latest
+    platform: linux/amd64
     container_name: chat-vectordb
     restart: always
     environment:
@@ -59,6 +63,7 @@ services:
 
   rag_api:
     image: ghcr.io/danny-avila/librechat-rag-api-dev-lite:latest
+    platform: linux/amd64
     container_name: chat-rag-api
     restart: always
     environment:
