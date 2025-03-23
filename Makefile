@@ -129,6 +129,7 @@ stop:
 	docker-compose down
 	docker-compose -f deploy-compose.yml down
 
+
 # Environment setup
 setup-env:
 	@echo "Setting up environment..."
@@ -560,6 +561,10 @@ deploy-prod:
 	@echo "Make sure you've configured your .env file with MongoDB Atlas connection"
 	docker-compose -f docker-compose.production.yml pull
 	docker-compose -f docker-compose.production.yml up -d
+
+deploy-stop:
+	@echo "Stopping production services..."
+	docker-compose -f docker-compose.production.yml down
 
 deploy-prod-build:
 	@echo "Building locally and deploying to production..."

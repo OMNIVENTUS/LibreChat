@@ -70,9 +70,13 @@ The deployment architecture consists of:
    apt-get install certbot
    certbot certonly --standalone -d chat.omniventus.com
 
-   # Copy certificates to NGINX SSL directory
-   cp /etc/letsencrypt/live/chat.omniventus.com/fullchain.pem /etc/nginx/ssl/
-   cp /etc/letsencrypt/live/chat.omniventus.com/privkey.pem /etc/nginx/ssl/
+   # Copy certificates to NGINX docker directory using volumes
+    volumes:
+      - ./client/nginx.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt/live/chat.omniventus.com:/etc/letsencrypt/live/chat.omniventus.com
+      - /etc/letsencrypt/archive/chat.omniventus.com:/etc/letsencrypt/archive/chat.omniventus.com
+      - /etc/letsencrypt/options-ssl-nginx.conf:/etc/letsencrypt/options-ssl-nginx.conf
+      - /etc/letsencrypt/ssl-dhparams.pem:/etc/letsencrypt/ssl-dhparams.pem
    ```
 
 5. Set up automatic certificate renewal:
@@ -89,7 +93,7 @@ The deployment architecture consists of:
 Edit the `.env` file in your project directory:
 
 ```bash
-nano /opt/LibreChat/.env
+vim /LibreChat/.env
 ```
 
 Update at least the following variables:
