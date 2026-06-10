@@ -1,18 +1,19 @@
+import { memo } from 'react';
 import { AgentCapabilities } from 'librechat-data-provider';
 import { useFormContext, Controller } from 'react-hook-form';
-import type { AgentForm } from '~/common';
 import {
   Checkbox,
   HoverCard,
   HoverCardContent,
   HoverCardPortal,
   HoverCardTrigger,
-} from '~/components/ui';
-import { CircleHelpIcon } from '~/components/svg';
+  CircleHelpIcon,
+} from '@librechat/client';
+import type { AgentForm } from '~/common';
 import { useLocalize } from '~/hooks';
 import { ESide } from '~/common';
 
-export default function FileSearchCheckbox() {
+function FileSearchCheckbox() {
   const localize = useLocalize();
   const methods = useFormContext<AgentForm>();
   const { control, setValue, getValues } = methods;
@@ -31,6 +32,7 @@ export default function FileSearchCheckbox() {
                 onCheckedChange={field.onChange}
                 className="relative float-left mr-2 inline-flex h-4 w-4 cursor-pointer"
                 value={field.value.toString()}
+                aria-label={localize('com_agents_enable_file_search')}
               />
             )}
           />
@@ -67,3 +69,5 @@ export default function FileSearchCheckbox() {
     </>
   );
 }
+
+export default memo(FileSearchCheckbox);

@@ -130,7 +130,7 @@ describe('formatAgentMessages', () => {
         content: [
           {
             type: ContentTypes.TEXT,
-            [ContentTypes.TEXT]: 'I\'ll search for that information.',
+            [ContentTypes.TEXT]: "I'll search for that information.",
             tool_call_ids: ['search_1'],
           },
           {
@@ -144,7 +144,7 @@ describe('formatAgentMessages', () => {
           },
           {
             type: ContentTypes.TEXT,
-            [ContentTypes.TEXT]: 'Now, I\'ll convert the temperature.',
+            [ContentTypes.TEXT]: "Now, I'll convert the temperature.",
             tool_call_ids: ['convert_1'],
           },
           {
@@ -156,7 +156,7 @@ describe('formatAgentMessages', () => {
               output: '23.89°C',
             },
           },
-          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Here\'s your answer.' },
+          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: "Here's your answer." },
         ],
       },
     ];
@@ -171,7 +171,7 @@ describe('formatAgentMessages', () => {
     expect(result[4]).toBeInstanceOf(AIMessage);
 
     // Check first AIMessage
-    expect(result[0].content).toBe('I\'ll search for that information.');
+    expect(result[0].content).toBe("I'll search for that information.");
     expect(result[0].tool_calls).toHaveLength(1);
     expect(result[0].tool_calls[0]).toEqual({
       id: 'search_1',
@@ -187,7 +187,7 @@ describe('formatAgentMessages', () => {
     );
 
     // Check second AIMessage
-    expect(result[2].content).toBe('Now, I\'ll convert the temperature.');
+    expect(result[2].content).toBe("Now, I'll convert the temperature.");
     expect(result[2].tool_calls).toHaveLength(1);
     expect(result[2].tool_calls[0]).toEqual({
       id: 'convert_1',
@@ -202,7 +202,7 @@ describe('formatAgentMessages', () => {
 
     // Check final AIMessage
     expect(result[4].content).toStrictEqual([
-      { [ContentTypes.TEXT]: 'Here\'s your answer.', type: ContentTypes.TEXT },
+      { [ContentTypes.TEXT]: "Here's your answer.", type: ContentTypes.TEXT },
     ]);
   });
 
@@ -217,7 +217,7 @@ describe('formatAgentMessages', () => {
         role: 'assistant',
         content: [{ type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'How can I help you?' }],
       },
-      { role: 'user', content: 'What\'s the weather?' },
+      { role: 'user', content: "What's the weather?" },
       {
         role: 'assistant',
         content: [
@@ -240,7 +240,7 @@ describe('formatAgentMessages', () => {
       {
         role: 'assistant',
         content: [
-          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Here\'s the weather information.' },
+          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: "Here's the weather information." },
         ],
       },
     ];
@@ -265,12 +265,12 @@ describe('formatAgentMessages', () => {
       { [ContentTypes.TEXT]: 'How can I help you?', type: ContentTypes.TEXT },
     ]);
     expect(result[2].content).toStrictEqual([
-      { [ContentTypes.TEXT]: 'What\'s the weather?', type: ContentTypes.TEXT },
+      { [ContentTypes.TEXT]: "What's the weather?", type: ContentTypes.TEXT },
     ]);
     expect(result[3].content).toBe('Let me check that for you.');
     expect(result[4].content).toBe('Sunny, 75°F');
     expect(result[5].content).toStrictEqual([
-      { [ContentTypes.TEXT]: 'Here\'s the weather information.', type: ContentTypes.TEXT },
+      { [ContentTypes.TEXT]: "Here's the weather information.", type: ContentTypes.TEXT },
     ]);
 
     // Check that there are no consecutive AIMessages
@@ -324,5 +324,38 @@ describe('formatAgentMessages', () => {
       'First part of response\nSecond part of response\nFinal part of response',
     );
     expect(result[0].content).not.toContain('Analyzing the problem...');
+  });
+
+  it('should exclude ERROR type content parts', () => {
+    const payload = [
+      {
+        role: 'assistant',
+        content: [
+          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Hello there' },
+          {
+            type: ContentTypes.ERROR,
+            [ContentTypes.ERROR]:
+              'An error occurred while processing the request: Something went wrong',
+          },
+          { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Final answer' },
+        ],
+      },
+    ];
+
+    const result = formatAgentMessages(payload);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBeInstanceOf(AIMessage);
+    expect(result[0].content).toEqual([
+      { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Hello there' },
+      { type: ContentTypes.TEXT, [ContentTypes.TEXT]: 'Final answer' },
+    ]);
+
+    // Make sure no error content exists in the result
+    const hasErrorContent = result[0].content.some(
+      (item) =>
+        item.type === ContentTypes.ERROR || JSON.stringify(item).includes('An error occurred'),
+    );
+    expect(hasErrorContent).toBe(false);
   });
 });

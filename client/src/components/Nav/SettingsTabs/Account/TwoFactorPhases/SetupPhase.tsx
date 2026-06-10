@@ -1,7 +1,7 @@
 import React from 'react';
 import { QrCode } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button, Spinner } from '~/components';
+import { Button, Spinner } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 
 const fadeAnimation = {
@@ -18,7 +18,7 @@ interface SetupPhaseProps {
   onGenerate: () => void;
 }
 
-export const SetupPhase: React.FC<SetupPhaseProps> = ({ isGenerating, onGenerate, onNext }) => {
+export const SetupPhase: React.FC<SetupPhaseProps> = ({ isGenerating, onGenerate }) => {
   const localize = useLocalize();
 
   return (

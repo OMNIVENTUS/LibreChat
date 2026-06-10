@@ -48,3 +48,4 @@ export {
   SelectTrigger,
   SelectValue,
 } from './Select';
+export { default as TermsAndConditionsModal } from './TermsAndConditionsModal';

@@ -7,14 +7,13 @@ import { getFileType } from '~/utils';
 
 export default function PanelFileCell({ row }: { row: Row<TFile | undefined> }) {
   const file = row.original;
-
   return (
     <div className="flex w-full items-center gap-2 relative">
       {(file?.scope === 'shared' || file?.scope === 'public') && (
         <Share2 fill="blue" className="absolute -right-1 -top-1 h-4 w-4 text-blue-500" />
       )}
       <div className="relative">
-        {file?.type.startsWith('image') === true ? (
+        {file?.type?.startsWith('image') === true ? (
           <ImagePreview
             url={file.filepath}
             className="h-10 w-10 flex-shrink-0"

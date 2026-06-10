@@ -1,5 +1,4 @@
-const { logger } = require('~/config');
-// const { Categories } = require('./schema/categories');
+const { logger } = require('@librechat/data-schemas');
 
 const options = [
   {

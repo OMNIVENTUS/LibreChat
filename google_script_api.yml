@@ -1,0 +1,111 @@
+openapi: 3.0.0
+info:
+  title: Quote Generator API
+  description: API for generating quotes as Google Documents from JSON data
+  version: 1.0.0
+servers:
+  - url: https://script.google.com/macros/s/AKfycbxJt6R9K30fnV2-wtUWtbB9Xsetyuv7Z13cDQmnoXaSHEjrUb9n5xUR4P_n3Afn2g5JRA/exec
+    description: Google Apps Script Web App URL
+paths:
+  /:
+    post:
+      operationId: createQuote
+      summary: Generate a new quote document
+      description: Creates a new Google Document quote based on the provided data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+components:
+  schemas:
+    PriceItem:
+      type: object
+      required:
+        - prestation
+        - description
+        - quantity
+        - price
+      properties:
+        prestation:
+          type: string
+          description: The name of the service or product
+          example: Development
+        description:
+          type: string
+          description: Detailed description of the service or product
+          example: Front-end Development
+        quantity:
+          type: number
+          description: The quantity of the service or product
+          example: 50
+        price:
+          type: number
+          description: The unit price (without tax)
+          example: 1500
+    QuoteRequest:
+      type: object
+      required:
+        - clientName
+        - projectName
+        - priceItems
+      properties:
+        clientName:
+          type: string
+          description: The name of the client
+          example: ABC Corp
+        projectName:
+          type: string
+          description: The name of the project
+          example: Website Development
+        clientPhone:
+          type: string
+          description: The phone number of the client
+          example: +33 1 23 45 67 89
+        salesFullname:
+          type: string
+          description: The name of the sales representative
+          example: John Doe
+        salesEmail:
+          type: string
+          description: The email of the sales representative
+          example: john.doe@example.com
+        salesPhone:
+          type: string
+          description: The phone number of the sales representative
+          example: +33 6 12 34 56 78
+        annexeContent:
+          type: string
+          description: Additional information to include in the quote
+          example: Additional information about the project.
+        priceItems:
+          type: array
+          description: List of items to be included in the quote
+          items:
+            $ref: '#/components/schemas/PriceItem'
+    QuoteResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the operation was successful
+        documentId:
+          type: string
+          description: ID of the generated Google Document
+          example: 1a2b3c4d5e6f7g8h9i0j
+        documentUrl:
+          type: string
+          description: URL to access the generated Google Document
+          example: https://docs.google.com/document/d/1a2b3c4d5e6f7g8h9i0j
+        error:
+          type: string
+          description: Error message if the operation failed
+          example: Invalid input data

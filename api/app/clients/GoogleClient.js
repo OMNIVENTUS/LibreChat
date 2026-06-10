@@ -1,6 +1,10 @@
 const { google } = require('googleapis');
+const { sleep } = require('@librechat/agents');
+const { logger } = require('@librechat/data-schemas');
+const { getModelMaxTokens } = require('@librechat/api');
 const { concat } = require('@langchain/core/utils/stream');
 const { ChatVertexAI } = require('@langchain/google-vertexai');
+const { Tokenizer, getSafetySettings } = require('@librechat/api');
 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
 const { GoogleGenerativeAI: GenAI } = require('@google/generative-ai');
 const { HumanMessage, SystemMessage } = require('@langchain/core/messages');
@@ -9,20 +13,17 @@ const {
   validateVisionModel,
   getResponseSender,
   endpointSettings,
+  parseTextParts,
   EModelEndpoint,
+  googleSettings,
   ContentTypes,
   VisionModes,
   ErrorTypes,
   Constants,
   AuthKeys,
 } = require('librechat-data-provider');
-const { getSafetySettings } = require('~/server/services/Endpoints/google/llm');
 const { encodeAndFormat } = require('~/server/services/Files/images');
-const Tokenizer = require('~/server/services/Tokenizer');
 const { spendTokens } = require('~/models/spendTokens');
-const { getModelMaxTokens } = require('~/utils');
-const { sleep } = require('~/server/utils');
-const { logger } = require('~/config');
 const {
   formatMessage,
   createContextHandlers,
@@ -33,7 +34,8 @@ const BaseClient = require('./BaseClient');
 
 const loc = process.env.GOOGLE_LOC || 'us-central1';
 const publisher = 'google';
-const endpointPrefix = `${loc}-aiplatform.googleapis.com`;
+const endpointPrefix =
+  loc === 'global' ? 'aiplatform.googleapis.com' : `${loc}-aiplatform.googleapis.com`;
 
 const settings = endpointSettings[EModelEndpoint.google];
 const EXCLUDED_GENAI_MODELS = /gemini-(?:1\.0|1-0|pro)/;
@@ -139,8 +141,7 @@ class GoogleClient extends BaseClient {
     this.options.attachments?.then((attachments) => this.checkVisionRequest(attachments));
 
     /** @type {boolean} Whether using a "GenerativeAI" Model */
-    this.isGenerativeModel =
-      this.modelOptions.model.includes('gemini') || this.modelOptions.model.includes('learnlm');
+    this.isGenerativeModel = /gemini|learnlm|gemma/.test(this.modelOptions.model);
 
     this.maxContextTokens =
       this.options.maxContextTokens ??
@@ -164,6 +165,16 @@ class GoogleClient extends BaseClient {
         }) must be less than or equal to maxContextTokens (${this.maxContextTokens})`,
       );
     }
+
+    // Add thinking configuration
+    this.modelOptions.thinkingConfig = {
+      thinkingBudget:
+        (this.modelOptions.thinking ?? googleSettings.thinking.default)
+          ? this.modelOptions.thinkingBudget
+          : 0,
+    };
+    delete this.modelOptions.thinking;
+    delete this.modelOptions.thinkingBudget;
 
     this.sender =
       this.options.sender ??
@@ -198,7 +209,11 @@ class GoogleClient extends BaseClient {
    */
   checkVisionRequest(attachments) {
     /* Validation vision request */
-    this.defaultVisionModel = this.options.visionModel ?? 'gemini-pro-vision';
+    this.defaultVisionModel =
+      this.options.visionModel ??
+      (!EXCLUDED_GENAI_MODELS.test(this.modelOptions.model)
+        ? this.modelOptions.model
+        : 'gemini-pro-vision');
     const availableModels = this.options.modelsConfig?.[EModelEndpoint.google];
     this.isVisionModel = validateVisionModel({ model: this.modelOptions.model, availableModels });
 
@@ -232,11 +247,11 @@ class GoogleClient extends BaseClient {
       msg.content = (
         !Array.isArray(msg.content)
           ? [
-            {
-              type: ContentTypes.TEXT,
-              [ContentTypes.TEXT]: msg.content,
-            },
-          ]
+              {
+                type: ContentTypes.TEXT,
+                [ContentTypes.TEXT]: msg.content,
+              },
+            ]
           : msg.content
       ).concat(message.image_urls);
 
@@ -290,7 +305,9 @@ class GoogleClient extends BaseClient {
     const { files, image_urls } = await encodeAndFormat(
       this.options.req,
       attachments,
-      EModelEndpoint.google,
+      {
+        endpoint: EModelEndpoint.google,
+      },
       mode,
     );
     message.image_urls = image_urls.length ? image_urls : undefined;
@@ -311,6 +328,9 @@ class GoogleClient extends BaseClient {
       for (const file of attachments) {
         if (file.embedded) {
           this.contextHandlers?.processFile(file);
+          continue;
+        }
+        if (file.metadata?.fileIdentifier) {
           continue;
         }
       }
@@ -770,6 +790,22 @@ class GoogleClient extends BaseClient {
     return this.usage;
   }
 
+  getMessageMapMethod() {
+    /**
+     * @param {TMessage} msg
+     */
+    return (msg) => {
+      if (msg.text != null && msg.text && msg.text.startsWith(':::thinking')) {
+        msg.text = msg.text.replace(/:::thinking.*?:::/gs, '').trim();
+      } else if (msg.content != null) {
+        msg.text = parseTextParts(msg.content, true);
+        delete msg.content;
+      }
+
+      return msg;
+    };
+  }
+
   /**
    * Calculates the correct token count for the current user message based on the token count map and API usage.
    * Edge case: If the calculation results in a negative value, it returns the original estimate.
@@ -827,7 +863,8 @@ class GoogleClient extends BaseClient {
     let reply = '';
     const { abortController } = options;
 
-    const model = this.modelOptions.modelName ?? this.modelOptions.model ?? '';
+    const model =
+      this.options.titleModel ?? this.modelOptions.modelName ?? this.modelOptions.model ?? '';
     const safetySettings = getSafetySettings(model);
     if (!EXCLUDED_GENAI_MODELS.test(model) && !this.project_id) {
       logger.debug('Identified titling model as GenAI version');

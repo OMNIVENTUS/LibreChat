@@ -1,4 +1,4 @@
-const checkAdmin = require('./checkAdmin');
+const checkAdmin = require('./admin');
 const checkStrictAdmin = require('./checkStrictAdmin');
 const { checkAccess, generateCheckAccess } = require('./generateCheckAccess');
 

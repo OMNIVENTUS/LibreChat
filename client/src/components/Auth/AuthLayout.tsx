@@ -1,22 +1,11 @@
-import { TranslationKeys, useLocalize } from '~/hooks';
-import { BlinkAnimation } from './BlinkAnimation';
+import { ThemeSelector } from '@librechat/client';
 import { TStartupConfig } from 'librechat-data-provider';
+import { ErrorMessage } from '~/components/Auth/ErrorMessage';
+import { TranslationKeys, useLocalize } from '~/hooks';
 import SocialLoginRender from './SocialLoginRender';
-import { ThemeSelector } from '~/components/ui';
+import { BlinkAnimation } from './BlinkAnimation';
 import { Banner } from '../Banners';
 import Footer from './Footer';
-
-const ErrorRender = ({ children }: { children: React.ReactNode }) => (
-  <div className="mt-16 flex justify-center">
-    <div
-      role="alert"
-      aria-live="assertive"
-      className="rounded-md border border-red-500 bg-red-500/10 px-3 py-2 text-sm text-gray-600 dark:text-gray-200"
-    >
-      {children}
-    </div>
-  </div>
-);
 
 function AuthLayout({
   children,
@@ -40,19 +29,29 @@ function AuthLayout({
   const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
   const DisplayError = () => {
     if (hasStartupConfigError) {
-      return <ErrorRender>{localize('com_auth_error_login_server')}</ErrorRender>;
+      return (
+        <div className="mx-auto sm:max-w-sm">
+          <ErrorMessage>{localize('com_auth_error_login_server')}</ErrorMessage>
+        </div>
+      );
     } else if (error === 'com_auth_error_invalid_reset_token') {
       return (
-        <ErrorRender>
-          {localize('com_auth_error_invalid_reset_token')}{' '}
-          <a className="font-semibold text-green-600 hover:underline" href="/forgot-password">
-            {localize('com_auth_click_here')}
-          </a>{' '}
-          {localize('com_auth_to_try_again')}
-        </ErrorRender>
+        <div className="mx-auto sm:max-w-sm">
+          <ErrorMessage>
+            {localize('com_auth_error_invalid_reset_token')}{' '}
+            <a className="font-semibold text-green-600 hover:underline" href="/forgot-password">
+              {localize('com_auth_click_here')}
+            </a>{' '}
+            {localize('com_auth_to_try_again')}
+          </ErrorMessage>
+        </div>
       );
     } else if (error != null && error) {
-      return <ErrorRender>{localize(error)}</ErrorRender>;
+      return (
+        <div className="mx-auto sm:max-w-sm">
+          <ErrorMessage>{localize(error)}</ErrorMessage>
+        </div>
+      );
     }
     return null;
   };
@@ -64,7 +63,7 @@ function AuthLayout({
         <div className="flex flex-col items-center space-y-2">
           <div className="mt-6 h-10 w-full bg-cover" aria-label="Logo container">
             <img
-              src="/assets/logo.svg"
+              src="assets/logo.svg"
               className="h-full w-full object-contain"
               alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'LibreChat' })}
             />
@@ -84,7 +83,7 @@ function AuthLayout({
 
       <div className="flex flex-grow items-center justify-center">
         <div className="w-authPageWidth overflow-hidden bg-white px-6 py-4 dark:bg-gray-900 sm:max-w-md sm:rounded-lg">
-          {!hasStartupConfigError && !isFetching && (
+          {!hasStartupConfigError && !isFetching && header && (
             <h1
               className="mb-4 text-center text-3xl font-semibold text-black dark:text-white"
               style={{ userSelect: 'none' }}

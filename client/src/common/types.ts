@@ -1,12 +1,21 @@
 import { RefObject } from 'react';
-import { FileSources } from 'librechat-data-provider';
-import type * as InputNumberPrimitive from 'rc-input-number';
-import type { ColumnDef } from '@tanstack/react-table';
-import type { SetterOrUpdater } from 'recoil';
-import type * as t from 'librechat-data-provider';
+import { Constants, FileSources, EModelEndpoint } from 'librechat-data-provider';
 import type { UseMutationResult } from '@tanstack/react-query';
+import type * as InputNumberPrimitive from 'rc-input-number';
+import type { SetterOrUpdater, RecoilState } from 'recoil';
+import type { ColumnDef } from '@tanstack/react-table';
+import type * as t from 'librechat-data-provider';
 import type { LucideIcon } from 'lucide-react';
 import type { TranslationKeys } from '~/hooks';
+
+export function isEphemeralAgent(agentId: string | null | undefined): boolean {
+  return agentId == null || agentId === '' || agentId === Constants.EPHEMERAL_AGENT_ID;
+}
+
+export interface ConfigFieldDetail {
+  title: string;
+  description: string;
+}
 
 export type CodeBarProps = {
   lang: string;
@@ -29,7 +38,6 @@ export enum STTEndpoints {
 
 export enum TTSEndpoints {
   browser = 'browser',
-  edge = 'edge',
   external = 'external',
 }
 
@@ -46,6 +54,14 @@ export type AudioChunk = {
     chars_durations_ms: number[];
     chars: string[];
   };
+};
+
+export type BadgeItem = {
+  id: string;
+  icon: React.ComponentType<any>;
+  label: string;
+  atom: RecoilState<boolean>;
+  isAvailable: boolean;
 };
 
 export type AssistantListItem = {
@@ -131,9 +147,12 @@ export interface DataColumnMeta {
 }
 
 export enum Panel {
+  advanced = 'advanced',
   builder = 'builder',
   actions = 'actions',
   model = 'model',
+  version = 'version',
+  mcp = 'mcp',
 }
 
 export type FileSetter =
@@ -155,6 +174,15 @@ export type ActionAuthForm = {
   client_url: string;
   scope: string;
   token_exchange_method: t.TokenExchangeMethodEnum;
+};
+
+export type MCPForm = ActionAuthForm & {
+  name?: string;
+  description?: string;
+  url?: string;
+  tools?: string[];
+  icon?: string;
+  trust?: boolean;
 };
 
 export type ActionWithNullableMetadata = Omit<t.Action, 'metadata'> & {
@@ -179,13 +207,45 @@ export type AgentPanelProps = {
   index?: number;
   agent_id?: string;
   activePanel?: string;
+  mcp?: t.MCP;
+  mcps?: t.MCP[];
   action?: t.Action;
   actions?: t.Action[];
+  createMutation: UseMutationResult<t.Agent, Error, t.AgentCreateParams>;
   setActivePanel: React.Dispatch<React.SetStateAction<Panel>>;
+  setMcp: React.Dispatch<React.SetStateAction<t.MCP | undefined>>;
   setAction: React.Dispatch<React.SetStateAction<t.Action | undefined>>;
   endpointsConfig?: t.TEndpointsConfig;
   setCurrentAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
   agentsConfig?: t.TAgentsEndpoint | null;
+};
+
+export interface MCPServerInfo {
+  serverName: string;
+  tools: t.AgentToolType[];
+  isConfigured: boolean;
+  isConnected: boolean;
+  metadata: t.TPlugin;
+}
+
+export type AgentPanelContextType = {
+  action?: t.Action;
+  actions?: t.Action[];
+  setAction: React.Dispatch<React.SetStateAction<t.Action | undefined>>;
+  mcp?: t.MCP;
+  mcps?: t.MCP[];
+  setMcp: React.Dispatch<React.SetStateAction<t.MCP | undefined>>;
+  setMcps: React.Dispatch<React.SetStateAction<t.MCP[] | undefined>>;
+  activePanel?: string;
+  regularTools?: t.TPlugin[];
+  setActivePanel: React.Dispatch<React.SetStateAction<Panel>>;
+  setCurrentAgentId: React.Dispatch<React.SetStateAction<string | undefined>>;
+  agent_id?: string;
+  startupConfig?: t.TStartupConfig | null;
+  agentsConfig?: t.TAgentsEndpoint | null;
+  endpointsConfig?: t.TEndpointsConfig | null;
+  /** Pre-computed MCP server information indexed by server key */
+  mcpServersMap: Map<string, MCPServerInfo>;
 };
 
 export type AgentModelPanelProps = {
@@ -296,12 +356,16 @@ export type TAskProps = {
 
 export type TOptions = {
   editedMessageId?: string | null;
+  editedContent?: t.TEditedContent;
   editedText?: string | null;
-  resubmitFiles?: boolean;
   isRegenerate?: boolean;
   isContinued?: boolean;
   isEdited?: boolean;
   overrideMessages?: t.TMessage[];
+  /** This value is only true when the user submits a message with "Save & Submit" for a user-created message */
+  isResubmission?: boolean;
+  /** Currently only utilized when `isResubmission === true`, uses that message's currently attached files */
+  overrideFiles?: t.TMessage['files'];
 };
 
 export type TAskFunction = (props: TAskProps, options?: TOptions) => void;
@@ -399,7 +463,7 @@ export type TAuthContext = {
   isAuthenticated: boolean;
   error: string | undefined;
   login: (data: t.TLoginUser) => void;
-  logout: () => void;
+  logout: (redirect?: string) => void;
   setError: React.Dispatch<React.SetStateAction<string | undefined>>;
   roles?: Record<string, t.TRole | null | undefined>;
 };
@@ -444,11 +508,20 @@ export type VoiceOption = {
 };
 
 export type TMessageAudio = {
-  messageId?: string;
-  content?: t.TMessageContentParts[] | string;
-  className?: string;
-  isLast: boolean;
+  isLast?: boolean;
   index: number;
+  messageId: string;
+  content: string;
+  className?: string;
+  renderButton?: (props: {
+    onClick: (e?: React.MouseEvent<HTMLButtonElement>) => void;
+    title: string;
+    icon: React.ReactNode;
+    isActive?: boolean;
+    isVisible?: boolean;
+    isDisabled?: boolean;
+    className?: string;
+  }) => React.ReactNode;
 };
 
 export type OptionWithIcon = Option & { icon?: React.ReactNode };
@@ -483,9 +556,23 @@ export interface ExtendedFile {
   attached?: boolean;
   embedded?: boolean;
   tool_resource?: string;
+  metadata?: t.TFile['metadata'];
 }
 
-export type ContextType = { navVisible: boolean; setNavVisible: (visible: boolean) => void };
+export interface ModelItemProps {
+  modelName: string;
+  endpoint: EModelEndpoint;
+  isSelected: boolean;
+  onSelect: () => void;
+  onNavigateBack: () => void;
+  icon?: JSX.Element;
+  className?: string;
+}
+
+export type ContextType = {
+  navVisible: boolean;
+  setNavVisible: React.Dispatch<React.SetStateAction<boolean>>;
+};
 
 export interface SwitcherProps {
   endpoint?: t.EModelEndpoint | null;
@@ -509,6 +596,7 @@ export type NewConversationParams = {
   buildDefault?: boolean;
   keepLatestMessage?: boolean;
   keepAddedConvos?: boolean;
+  disableParams?: boolean;
 };
 
 export type ConvoGenerator = (params: NewConversationParams) => void | t.TConversation;
@@ -528,7 +616,8 @@ export type TResData = TBaseResData & {
   responseMessage: t.TMessage;
 };
 
-export type TFinalResData = TBaseResData & {
+export type TFinalResData = Omit<TBaseResData, 'conversation'> & {
+  conversation: Partial<t.TConversation> & Pick<t.TConversation, 'conversationId'>;
   requestMessage?: t.TMessage;
   responseMessage?: t.TMessage;
 };

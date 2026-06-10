@@ -1,18 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
+import { useCombobox } from '@librechat/client';
 import { AutoSizer, List } from 'react-virtualized';
 import { EModelEndpoint } from 'librechat-data-provider';
-import type { SetterOrUpdater } from 'recoil';
+import type { TConversation } from 'librechat-data-provider';
 import type { MentionOption, ConvoGenerator } from '~/common';
+import type { SetterOrUpdater } from 'recoil';
 import useSelectMention from '~/hooks/Input/useSelectMention';
+import { useLocalize, TranslationKeys } from '~/hooks';
 import { useAssistantsMapContext } from '~/Providers';
 import useMentions from '~/hooks/Input/useMentions';
-import { useLocalize, useCombobox, TranslationKeys } from '~/hooks';
 import { removeCharIfLast } from '~/utils';
 import MentionItem from './MentionItem';
 
 const ROW_HEIGHT = 40;
 
 export default function Mention({
+  conversation,
   setShowMentionPopover,
   newConversation,
   textAreaRef,
@@ -20,6 +23,7 @@ export default function Mention({
   placeholder = 'com_ui_mention',
   includeAssistants = true,
 }: {
+  conversation: TConversation | null;
   setShowMentionPopover: SetterOrUpdater<boolean>;
   newConversation: ConvoGenerator;
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
@@ -28,7 +32,7 @@ export default function Mention({
   includeAssistants?: boolean;
 }) {
   const localize = useLocalize();
-  const assistantMap = useAssistantsMapContext();
+  const assistantsMap = useAssistantsMapContext();
   const {
     options,
     presets,
@@ -37,11 +41,12 @@ export default function Mention({
     modelsConfig,
     endpointsConfig,
     assistantListMap,
-  } = useMentions({ assistantMap: assistantMap || {}, includeAssistants });
+  } = useMentions({ assistantMap: assistantsMap || {}, includeAssistants });
   const { onSelectMention } = useSelectMention({
     presets,
     modelSpecs,
-    assistantMap,
+    conversation,
+    assistantsMap,
     endpointsConfig,
     newConversation,
   });
@@ -65,7 +70,7 @@ export default function Mention({
       setSearchValue('');
       setOpen(false);
       setShowMentionPopover(false);
-      onSelectMention(mention);
+      onSelectMention?.(mention);
 
       if (textAreaRef.current) {
         removeCharIfLast(textAreaRef.current, commandChar);
@@ -158,11 +163,11 @@ export default function Mention({
   };
 
   return (
-    <div className="absolute bottom-14 z-10 w-full space-y-2">
+    <div className="absolute bottom-28 z-10 w-full space-y-2">
       <div className="popover border-token-border-light rounded-2xl border bg-white p-2 shadow-lg dark:bg-gray-700">
         <input
           // The user expects focus to transition to the input field when the popover is opened
-
+          // eslint-disable-next-line jsx-a11y/no-autofocus
           autoFocus
           ref={inputRef}
           placeholder={localize(placeholder)}

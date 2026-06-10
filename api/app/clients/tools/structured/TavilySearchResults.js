@@ -1,4 +1,5 @@
 const { z } = require('zod');
+const { ProxyAgent, fetch } = require('undici');
 const { Tool } = require('@langchain/core/tools');
 const { getEnvironmentVariable } = require('@langchain/core/utils/env');
 
@@ -43,9 +44,39 @@ class TavilySearchResults extends Tool {
         .boolean()
         .optional()
         .describe('Whether to include answers in the search results. Default is False.'),
-      // include_raw_content: z.boolean().optional().describe('Whether to include raw content in the search results. Default is False.'),
-      // include_domains: z.array(z.string()).optional().describe('A list of domains to specifically include in the search results.'),
-      // exclude_domains: z.array(z.string()).optional().describe('A list of domains to specifically exclude from the search results.'),
+      include_raw_content: z
+        .boolean()
+        .optional()
+        .describe('Whether to include raw content in the search results. Default is False.'),
+      include_domains: z
+        .array(z.string())
+        .optional()
+        .describe('A list of domains to specifically include in the search results.'),
+      exclude_domains: z
+        .array(z.string())
+        .optional()
+        .describe('A list of domains to specifically exclude from the search results.'),
+      topic: z
+        .enum(['general', 'news', 'finance'])
+        .optional()
+        .describe(
+          'The category of the search. Use news ONLY if query SPECIFCALLY mentions the word "news".',
+        ),
+      time_range: z
+        .enum(['day', 'week', 'month', 'year', 'd', 'w', 'm', 'y'])
+        .optional()
+        .describe('The time range back from the current date to filter results.'),
+      days: z
+        .number()
+        .min(1)
+        .optional()
+        .describe('Number of days back from the current date to include. Only if topic is news.'),
+      include_image_descriptions: z
+        .boolean()
+        .optional()
+        .describe(
+          'When include_images is true, also add a descriptive text for each image. Default is false.',
+        ),
     });
   }
 
@@ -72,13 +103,19 @@ class TavilySearchResults extends Tool {
       ...this.kwargs,
     };
 
-    const response = await fetch('https://api.tavily.com/search', {
+    const fetchOptions = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(requestBody),
-    });
+    };
+
+    if (process.env.PROXY) {
+      fetchOptions.dispatcher = new ProxyAgent(process.env.PROXY);
+    }
+
+    const response = await fetch('https://api.tavily.com/search', fetchOptions);
 
     const json = await response.json();
     if (!response.ok) {

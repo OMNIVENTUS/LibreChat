@@ -1,7 +1,6 @@
-const mongoose = require('mongoose');
-const fileSchema = require('./schema/fileSchema');
-const logger = require('../utils/logger');
-const File = mongoose.model('File', fileSchema);
+const { logger } = require('@librechat/data-schemas');
+const { EToolResources, FileContext } = require('librechat-data-provider');
+const { File } = require('~/db/models');
 
 /**
  * Finds a file by its file_id with additional query options.
@@ -16,45 +15,103 @@ const findFileById = async (file_id, options = {}) => {
 /**
  * Retrieves files matching a given filter, including scope-based access
  * @param {Object} filter - The filter criteria to apply
- * @param {Object} options - Additional options including user context
+ * @param {Object|Object} [optionsOrSortOptions] - Options object with user context OR sort options (for backward compatibility)
+ * @param {Object|String} [selectFields={ text: 0 }] - Fields to include/exclude in the query results. Default excludes the 'text' field.
  * @returns {Promise<Array<MongoFile>>} Array of accessible files
  */
-const getFiles = async (filter, options = {}) => {
+const getFiles = async (filter, optionsOrSortOptions = {}, selectFields = { text: 0 }) => {
+  // Handle both old format (options object with user) and new format (sortOptions, selectFields)
+  let options = {};
+  let sortOptions = { updatedAt: -1 };
+  let finalSelectFields = selectFields;
+
+  // Check if optionsOrSortOptions is an options object (has user property) or sort options
+  if (optionsOrSortOptions && typeof optionsOrSortOptions === 'object' && !Array.isArray(optionsOrSortOptions)) {
+    if (optionsOrSortOptions.user !== undefined || optionsOrSortOptions.sort !== undefined) {
+      // Old format: options object
+      options = optionsOrSortOptions;
+      sortOptions = { updatedAt: -1, ...options.sort };
+      finalSelectFields = selectFields;
+    } else {
+      // New format: sortOptions
+      sortOptions = { updatedAt: -1, ...optionsOrSortOptions };
+      finalSelectFields = selectFields;
+    }
+  }
+
   const { user } = options;
-  //handle access groups only if user is defined
-  const accessGroups = [
-    ...(user?.file_access_groups || []),
-    user?.role, // Include the user's role for backward compatibility
-    user?.id, // Include user ID for direct shares
-  ].filter(Boolean);
-
-  const OrFilter = [
-    { scope: 'public' }, // Public files
-    {
-      scope: 'shared',
-      access_control: {
-        $in: accessGroups,
-      },
-    },
-  ];
-
+  
+  // Apply scope-based access control if user is provided
   if (user?.id) {
+    const accessGroups = [
+      ...(user?.file_access_groups || []),
+      user?.role, // Include the user's role for backward compatibility
+      user?.id, // Include user ID for direct shares
+    ].filter(Boolean);
+
+    const OrFilter = [
+      { scope: 'public' }, // Public files
+      {
+        scope: 'shared',
+        access_control: {
+          $in: accessGroups,
+        },
+      },
+    ];
+
     OrFilter.push({ user: user.id });
+
+    // Allow admins and managers to access all shared files
+    if (user?.role === 'ADMIN' || user?.role === 'MANAGER') {
+      OrFilter.push({ scope: 'shared' });
+    }
+
+    const scopeFilter = {
+      $or: OrFilter,
+    };
+
+    filter = { ...scopeFilter, ...filter };
   }
 
-  // Allow admins and managers to access all shared files
-  if (user?.role === 'ADMIN' || user?.role === 'MANAGER') {
-    OrFilter.push({ scope: 'shared' });
+  const query = File.find(filter).select(finalSelectFields).sort(sortOptions);
+  return await query.lean();
+};
+
+/**
+ * Retrieves tool files (files that are embedded or have a fileIdentifier) from an array of file IDs
+ * @param {string[]} fileIds - Array of file_id strings to search for
+ * @param {Set<EToolResources>} toolResourceSet - Optional filter for tool resources
+ * @returns {Promise<Array<MongoFile>>} Files that match the criteria
+ */
+const getToolFilesByIds = async (fileIds, toolResourceSet) => {
+  if (!fileIds || !fileIds.length || !toolResourceSet?.size) {
+    return [];
   }
 
-  const scopeFilter = {
-    $or: OrFilter,
-  };
+  try {
+    const filter = {
+      file_id: { $in: fileIds },
+      $or: [],
+    };
 
-  const finalFilter = user?.id ? { ...scopeFilter, ...filter } : filter;
+    if (toolResourceSet.has(EToolResources.context)) {
+      filter.$or.push({ text: { $exists: true, $ne: null }, context: FileContext.agents });
+    }
+    if (toolResourceSet.has(EToolResources.file_search)) {
+      filter.$or.push({ embedded: true });
+    }
+    if (toolResourceSet.has(EToolResources.execute_code)) {
+      filter.$or.push({ 'metadata.fileIdentifier': { $exists: true } });
+    }
 
-  const sortOptions = { updatedAt: -1, ...options.sort };
-  return await File.find(finalFilter).sort(sortOptions).lean();
+    const selectFields = { text: 0 };
+    const sortOptions = { updatedAt: -1 };
+
+    return await getFiles(filter, sortOptions, selectFields);
+  } catch (error) {
+    logger.error('[getToolFilesByIds] Error retrieving tool files:', error);
+    throw new Error('Error retrieving tool files');
+  }
 };
 
 /**
@@ -138,14 +195,37 @@ const deleteFiles = async (file_ids, user) => {
   return await File.deleteMany(deleteQuery);
 };
 
+/**
+ * Batch updates files with new signed URLs in MongoDB
+ *
+ * @param {MongoFile[]} updates - Array of updates in the format { file_id, filepath }
+ * @returns {Promise<void>}
+ */
+async function batchUpdateFiles(updates) {
+  if (!updates || updates.length === 0) {
+    return;
+  }
+
+  const bulkOperations = updates.map((update) => ({
+    updateOne: {
+      filter: { file_id: update.file_id },
+      update: { $set: { filepath: update.filepath } },
+    },
+  }));
+
+  const result = await File.bulkWrite(bulkOperations);
+  logger.info(`Updated ${result.modifiedCount} files with new S3 URLs`);
+}
+
 module.exports = {
-  File,
   findFileById,
   getFiles,
+  getToolFilesByIds,
   createFile,
   updateFile,
   updateFileUsage,
   deleteFile,
   deleteFiles,
   deleteFileByFilter,
+  batchUpdateFiles,
 };

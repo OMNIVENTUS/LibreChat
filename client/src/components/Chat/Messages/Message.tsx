@@ -73,8 +73,8 @@ export default function Message(props: TMessageProps) {
             </div>
           </div>
         ) : (
-          <div className="m-auto justify-center p-4 py-2 md:gap-6 ">
-            <MessageRender {...props} isSubmittingFamily={isSubmittingFamily} />
+          <div className="m-auto justify-center p-4 py-2 md:gap-6">
+            <MessageRender {...props} />
           </div>
         )}
       </MessageContainer>
