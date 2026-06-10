@@ -1,0 +1,48 @@
+## Traefik — centralized reverse proxy for the droplet.
+##
+## This is an INDEPENDENT project. Deploy it under /opt/proxy on the server:
+##   sudo mkdir -p /opt/proxy/letsencrypt
+##   sudo cp utils/docker/proxy/docker-compose.yml /opt/proxy/docker-compose.yml
+##   sudo touch /opt/proxy/letsencrypt/acme.json && sudo chmod 600 /opt/proxy/letsencrypt/acme.json
+##   docker network create web        # shared network, created once
+##   cd /opt/proxy && docker compose up -d
+##
+## Traefik owns ports 80/443 for ALL projects on the droplet (LibreChat, Strapi, ...).
+## Each project opts in via Docker labels + membership of the external `web` network.
+##
+## FIRST-TIME SSL: uncomment the staging `caserver` line below, bring Traefik up, confirm a
+## staging cert issues (openssl ... -issuer shows "(STAGING)"), THEN comment it out, wipe
+## letsencrypt/acme.json, and bring it up again to obtain the real certificate. This avoids
+## burning the Let's Encrypt production rate limit while testing.
+
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    restart: always
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      # Global HTTP -> HTTPS redirect
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # Let's Encrypt (HTTP-01 challenge on the `web` entrypoint)
+      - "--certificatesresolvers.le.acme.email=lionel@omniventus.com"
+      - "--certificatesresolvers.le.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.le.acme.httpchallenge.entrypoint=web"
+      # --- FIRST-TIME ONLY: uncomment to test against staging, then re-comment & re-issue ---
+      # - "--certificatesresolvers.le.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt        # acme.json lives here — DO NOT delete once it holds a real cert
+    networks:
+      - web
+
+networks:
+  web:
+    external: true

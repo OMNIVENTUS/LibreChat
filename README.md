@@ -407,3 +407,4 @@ notion json api:
 
 - sort prompt by category so that user can find them easily
 - create more categories for prompts
+- "do-librechat" is an alias to connect to the digital ocean instance of librechat
