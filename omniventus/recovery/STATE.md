@@ -11,10 +11,10 @@ Monitoring sessions may read this file but never write to the repo.
 ## Current
 
 - phase: 1
-- status: not-started        <!-- not-started | in-progress | done | blocked -->
-- owner: —                   <!-- who/what is executing: session date or human name -->
+- status: in-progress        <!-- not-started | in-progress | done | blocked -->
+- owner: claude-code session 2026-06-10
 - updated: 2026-06-10
-- last_commit: —             <!-- last recovery commit sha -->
+- last_commit: 071c0ce96     <!-- last recovery commit sha -->
 - blocker: —                 <!-- required when status=blocked: what and why -->
 
 ## Phase index
@@ -27,3 +27,4 @@ Monitoring sessions may read this file but never write to the repo.
 ## Log
 
 - 2026-06-10 — recovery plan created from diagnosis (see ../DIAGNOSIS-2026-06-10.md); state file initialized.
+- 2026-06-10 — phase 1 started. Safety net done: tar backup ../librechat-backup-20260610.tar.gz (393M), rerere enabled, staged merge committed as-is (18338da90), omniventus layer + recovery docs committed (071c0ce96), pushed to origin/custom-main.
