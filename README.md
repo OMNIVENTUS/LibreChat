@@ -90,24 +90,6 @@
 
   - [Code Artifacts](https://youtu.be/GfTj7O4gmd0?si=WJbdnemZpJzBrJo3) allow creation of React, HTML, and Mermaid diagrams directly in chat
 
-<<<<<<< HEAD
-- 💾 **Presets & Context Management**:
-
-  - Create, Save, & Share Custom Presets
-  - Switch between AI Endpoints and Presets mid-chat
-  - Edit, Resubmit, and Continue Messages with Conversation branching
-  - [Fork Messages & Conversations](https://www.librechat.ai/docs/features/fork) for Advanced Context control
-
-- 💬 **Multimodal & File Interactions**:
-
-  - Upload and analyze images with Claude 3, GPT-4o, o1, Llama-Vision, and Gemini 📸
-  - Chat with Files using Custom Endpoints, OpenAI, Azure, Anthropic, AWS Bedrock, & Google 🗃️
-
-- 🌎 **Multilingual UI**:
-
-  - English, 中文, Deutsch, Español, Français, Italiano, Polski, Português Brasileiro
-  - Русский, 日本語, Svenska, 한국어, Tiếng Việt, 繁體中文, العربية, Türkçe, Nederlands, עברית
-=======
 - 🎨 **Image Generation & Editing**
   - Text-to-image and image-to-image with [GPT-Image-1](https://www.librechat.ai/docs/features/image_gen#1--openai-image-tools-recommended)
   - Text-to-image with [DALL-E (3/2)](https://www.librechat.ai/docs/features/image_gen#2--dalle-legacy), [Stable Diffusion](https://www.librechat.ai/docs/features/image_gen#3--stable-diffusion-local), [Flux](https://www.librechat.ai/docs/features/image_gen#4--flux), or any [MCP server](https://www.librechat.ai/docs/features/image_gen#5--model-context-protocol-mcp)
@@ -129,7 +111,6 @@
   - Polski, Português (PT), Português (BR), Русский, 日本語, Svenska, 한국어, Tiếng Việt
   - Türkçe, Nederlands, עברית, Català, Čeština, Dansk, Eesti, فارسی
   - Suomi, Magyar, Հայերեն, Bahasa Indonesia, ქართული, Latviešu, ไทย, ئۇيغۇرچە
->>>>>>> main
 
 - 🧠 **Reasoning UI**:
 
@@ -190,16 +171,9 @@ Click on the thumbnail to open the video☝️
 - **Website:** [github.com/LibreChat-AI/librechat.ai](https://github.com/LibreChat-AI/librechat.ai)
 
 **Other:**
-<<<<<<< HEAD
-
-- **Website:** [librechat.ai](https://librechat.ai)
-- **Documentation:** [docs.librechat.ai](https://docs.librechat.ai)
-- **Blog:** [blog.librechat.ai](https://blog.librechat.ai)
-=======
   - **Website:** [librechat.ai](https://librechat.ai)
   - **Documentation:** [librechat.ai/docs](https://librechat.ai/docs)
   - **Blog:** [librechat.ai/blog](https://librechat.ai/blog)
->>>>>>> main
 
 ---
 

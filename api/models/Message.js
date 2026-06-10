@@ -262,11 +262,9 @@ async function updateMessage(req, message, metadata) {
       text: updatedMessage.text,
       isCreatedByUser: updatedMessage.isCreatedByUser,
       tokenCount: updatedMessage.tokenCount,
-<<<<<<< HEAD
+      // [OMNIVENTUS] keep custom contextualActions alongside upstream feedback
       contextualActions: updatedMessage?.contextualActions,
-=======
       feedback: updatedMessage.feedback,
->>>>>>> main
     };
   } catch (err) {
     logger.error('Error updating message:', err);

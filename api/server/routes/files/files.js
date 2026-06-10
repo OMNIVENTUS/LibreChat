@@ -8,6 +8,7 @@ const {
   CacheKeys,
   FileSources,
   ResourceType,
+  SystemRoles,
   EModelEndpoint,
   PermissionBits,
   checkOpenAIStorage,
@@ -155,8 +156,6 @@ router.delete('/', async (req, res) => {
     }
 
     const fileIds = files.map((file) => file.file_id);
-<<<<<<< HEAD
-=======
     const dbFiles = await getFiles({ file_id: { $in: fileIds } });
 
     const ownedFiles = [];
@@ -185,7 +184,12 @@ router.delete('/', async (req, res) => {
     let authorizedFiles = [...ownedFiles];
     let unauthorizedFiles = [];
 
-    if (req.body.agent_id && nonOwnedFiles.length > 0) {
+    // [OMNIVENTUS-START] admins may delete files they do not own (shared/preloaded files)
+    // TODO: check if the file is shared with the group and if so, check if the user is an admin
+    if (req.user.role === SystemRoles.ADMIN) {
+      authorizedFiles.push(...nonOwnedFiles);
+    } else if (req.body.agent_id && nonOwnedFiles.length > 0) {
+      // [OMNIVENTUS-END]
       const nonOwnedFileIds = nonOwnedFiles.map((f) => f.file_id);
       const accessMap = await hasAccessToFilesViaAgent({
         userId: req.user.id,
@@ -205,22 +209,9 @@ router.delete('/', async (req, res) => {
     } else {
       unauthorizedFiles = nonOwnedFiles;
     }
->>>>>>> main
 
-    const dbFiles = await getFiles({ file_id: { $in: fileIds } });
-
-    if (dbFiles.length === 0) {
-      logger.error(
-        `[/files] Files not found: ${files
-          .filter((f) => f.file_id)
-          .map((f) => f.file_id)
-          .join(', ')}`,
-      );
-      return res.status(404).json({ message: 'Files not found' });
-    }
-    const unauthorizedFiles = dbFiles.filter((file) => (file.user.toString() !== req.user.id && req.user.role !== 'admin'));
-    //TODO: check if the file is shared with the group and if so, check if the user is an admin
     if (unauthorizedFiles.length > 0) {
+      // [OMNIVENTUS] custom log retained from fork
       logger.error('You can only delete your own files');
       return res.status(403).json({
         message: 'You can only delete files you have access to',

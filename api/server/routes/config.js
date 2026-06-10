@@ -144,9 +144,8 @@ router.get('/', async function (req, res) {
       publicSharedLinksEnabled,
       analyticsGtmId: process.env.ANALYTICS_GTM_ID,
       instanceProjectId: instanceProject._id.toString(),
-<<<<<<< HEAD
+      // [OMNIVENTUS] file access groups for shared-files feature
       fileAccessGroups: process.env.FILE_ACCESS_GROUPS?.split(',') || ['public'],
-=======
       bundlerURL: process.env.SANDPACK_BUNDLER_URL,
       staticBundlerURL: process.env.SANDPACK_STATIC_BUNDLER_URL,
       sharePointFilePickerEnabled,
@@ -157,7 +156,6 @@ router.get('/', async function (req, res) {
       conversationImportMaxFileSize: process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES
         ? parseInt(process.env.CONVERSATION_IMPORT_MAX_FILE_SIZE_BYTES, 10)
         : 0,
->>>>>>> main
     };
 
     const minPasswordLength = parseInt(process.env.MIN_PASSWORD_LENGTH, 10);

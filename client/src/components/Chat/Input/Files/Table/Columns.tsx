@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { ArrowUpDown, Database } from 'lucide-react';
+// [OMNIVENTUS] Users icon for the access-groups column
+import { ArrowUpDown, Database, Users } from 'lucide-react';
 import { FileSources, FileContext } from 'librechat-data-provider';
 import {
   Button,
@@ -220,7 +221,7 @@ export const columns: ColumnDef<TFile>[] = [
       return `${value}${suffix}`;
     },
   },
-<<<<<<< HEAD
+  // [OMNIVENTUS-START] access-groups column for the shared-files feature
   {
     accessorKey: 'access_control',
     header: ({ column }) => {
@@ -230,9 +231,10 @@ export const columns: ColumnDef<TFile>[] = [
           column={column}
           title={localize('com_users_access_groups')}
           filters={{
-            Groups: column.getFacetedUniqueValues().size > 0
-              ? Array.from(column.getFacetedUniqueValues().keys()).filter(Boolean)
-              : ['global'],
+            Groups:
+              column.getFacetedUniqueValues().size > 0
+                ? Array.from(column.getFacetedUniqueValues().keys()).filter(Boolean)
+                : ['global'],
           }}
         />
       );
@@ -242,12 +244,14 @@ export const columns: ColumnDef<TFile>[] = [
       return (
         <div className="flex flex-wrap items-center gap-2">
           <Users className="icon-sm text-zinc-500" />
-          <span>{access_control?.length ? access_control.filter((group) => group !== 'admin').join(', ') : 'global'}</span>
+          <span>
+            {access_control?.length
+              ? access_control.filter((group) => group !== 'admin').join(', ')
+              : 'global'}
+          </span>
         </div>
       );
     },
   },
+  // [OMNIVENTUS-END]
 ];
-=======
-];
->>>>>>> main

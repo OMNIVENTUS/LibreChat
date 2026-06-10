@@ -11,6 +11,7 @@ import {
   webSearchPermissionsSchema,
   fileSearchPermissionsSchema,
   multiConvoPermissionsSchema,
+  userAdminPermissionsSchema,
   temporaryChatPermissionsSchema,
   peoplePickerPermissionsSchema,
   fileCitationsPermissionsSchema,
@@ -24,29 +25,24 @@ export enum SystemRoles {
    * The Admin role
    */
   ADMIN = 'ADMIN',
+  // [OMNIVENTUS-START]
   /**
    * The Manager role - between Admin and User
    */
   MANAGER = 'MANAGER',
+  // [OMNIVENTUS-END]
   /**
    * The default user role
    */
   USER = 'USER',
 }
-export type TPromptPermissions = z.infer<typeof promptPermissionsSchema>;
-export type TBookmarkPermissions = z.infer<typeof bookmarkPermissionsSchema>;
-export type TMultiConvoPermissions = z.infer<typeof multiConvoPermissionsSchema>;
-export type TTemporaryChatPermissions = z.infer<typeof temporaryChatPermissionsSchema>;
-export type TRunCodePermissions = z.infer<typeof runCodePermissionsSchema>;
-export type TUserAdminPermissions = z.infer<typeof userAdminPermissionsSchema>;
-=======
+
 export const roleSchema = z.object({
   name: z.string(),
   permissions: permissionsSchema,
 });
 
 export type TRole = z.infer<typeof roleSchema>;
->>>>>>> main
 
 const defaultRolesSchema = z.object({
   [SystemRoles.ADMIN]: roleSchema.extend({
@@ -100,43 +96,48 @@ const defaultRolesSchema = z.object({
       [PermissionTypes.FILE_CITATIONS]: fileCitationsPermissionsSchema.extend({
         [Permissions.USE]: z.boolean().default(true),
       }),
-    }),
-    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-      [Permissions.DELETE]: z.boolean().default(true),
+      // [OMNIVENTUS] admins get full user administration rights
+      [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.DELETE]: z.boolean().default(true),
+      }),
     }),
   }),
+  // [OMNIVENTUS-START] Manager role: shared-global prompts/agents + user administration
   [SystemRoles.MANAGER]: roleSchema.extend({
     name: z.literal(SystemRoles.MANAGER),
-    [PermissionTypes.PROMPTS]: promptPermissionsSchema.extend({
-      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
-      [Permissions.USE]: z.boolean().default(true),
-      [Permissions.CREATE]: z.boolean().default(true),
-      // [Permissions.SHARE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.BOOKMARKS]: bookmarkPermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.AGENTS]: agentPermissionsSchema.extend({
-      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
-      [Permissions.USE]: z.boolean().default(true),
-      [Permissions.CREATE]: z.boolean().default(true),
-      // [Permissions.SHARE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.RUN_CODE]: runCodePermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-    }),
-    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
-      [Permissions.USE]: z.boolean().default(true),
-      [Permissions.DELETE]: z.boolean().default(true),
+    permissions: permissionsSchema.extend({
+      [PermissionTypes.PROMPTS]: promptPermissionsSchema.extend({
+        [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.CREATE]: z.boolean().default(true),
+        // [Permissions.SHARE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.BOOKMARKS]: bookmarkPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.AGENTS]: agentPermissionsSchema.extend({
+        [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.CREATE]: z.boolean().default(true),
+        // [Permissions.SHARE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.RUN_CODE]: runCodePermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+      }),
+      [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.DELETE]: z.boolean().default(true),
+      }),
     }),
   }),
+  // [OMNIVENTUS-END]
   [SystemRoles.USER]: roleSchema.extend({
     name: z.literal(SystemRoles.USER),
     permissions: permissionsSchema,
@@ -193,8 +194,58 @@ export const roleDefaults = defaultRolesSchema.parse({
       [PermissionTypes.FILE_CITATIONS]: {
         [Permissions.USE]: true,
       },
+      // [OMNIVENTUS]
+      [PermissionTypes.USER_ADMIN]: {
+        [Permissions.USE]: true,
+        [Permissions.DELETE]: true,
+      },
     },
   },
+  // [OMNIVENTUS-START] Manager role defaults
+  [SystemRoles.MANAGER]: {
+    name: SystemRoles.MANAGER,
+    permissions: {
+      [PermissionTypes.PROMPTS]: {
+        [Permissions.SHARED_GLOBAL]: true,
+        [Permissions.USE]: true,
+        [Permissions.CREATE]: true,
+      },
+      [PermissionTypes.BOOKMARKS]: {
+        [Permissions.USE]: true,
+      },
+      [PermissionTypes.MEMORIES]: {},
+      [PermissionTypes.AGENTS]: {
+        [Permissions.SHARED_GLOBAL]: true,
+        [Permissions.USE]: true,
+        [Permissions.CREATE]: true,
+      },
+      [PermissionTypes.MULTI_CONVO]: {
+        [Permissions.USE]: true,
+      },
+      [PermissionTypes.TEMPORARY_CHAT]: {
+        [Permissions.USE]: true,
+      },
+      [PermissionTypes.RUN_CODE]: {
+        [Permissions.USE]: true,
+      },
+      [PermissionTypes.WEB_SEARCH]: {},
+      [PermissionTypes.PEOPLE_PICKER]: {
+        [Permissions.VIEW_USERS]: true,
+        [Permissions.VIEW_GROUPS]: true,
+        [Permissions.VIEW_ROLES]: true,
+      },
+      [PermissionTypes.MARKETPLACE]: {
+        [Permissions.USE]: false,
+      },
+      [PermissionTypes.FILE_SEARCH]: {},
+      [PermissionTypes.FILE_CITATIONS]: {},
+      [PermissionTypes.USER_ADMIN]: {
+        [Permissions.USE]: true,
+        [Permissions.DELETE]: true,
+      },
+    },
+  },
+  // [OMNIVENTUS-END]
   [SystemRoles.USER]: {
     name: SystemRoles.USER,
     permissions: {
@@ -216,6 +267,8 @@ export const roleDefaults = defaultRolesSchema.parse({
       },
       [PermissionTypes.FILE_SEARCH]: {},
       [PermissionTypes.FILE_CITATIONS]: {},
+      // [OMNIVENTUS] regular users have no user-admin rights (schema defaults to false)
+      [PermissionTypes.USER_ADMIN]: {},
     },
   },
 });

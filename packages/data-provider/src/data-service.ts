@@ -977,4 +977,3 @@ export function getGraphApiToken(params: q.GraphTokenParams): Promise<q.GraphTok
 export function getDomainServerBaseUrl(): string {
   return `${endpoints.apiBaseUrl()}/api`;
 }
->>>>>>> main

@@ -52,6 +52,12 @@ export enum PermissionTypes {
    * Type for using the "File Citations" feature in agents
    */
   FILE_CITATIONS = 'FILE_CITATIONS',
+  // [OMNIVENTUS-START]
+  /**
+   * Type for User Admin Permissions
+   */
+  USER_ADMIN = 'USER_ADMIN',
+  // [OMNIVENTUS-END]
 }
 
 /**
@@ -70,6 +76,8 @@ export enum Permissions {
   VIEW_USERS = 'VIEW_USERS',
   VIEW_GROUPS = 'VIEW_GROUPS',
   VIEW_ROLES = 'VIEW_ROLES',
+  // [OMNIVENTUS] permission to delete resources (used by USER_ADMIN)
+  DELETE = 'DELETE',
 }
 
 export const promptPermissionsSchema = z.object({
@@ -144,6 +152,14 @@ export const fileCitationsPermissionsSchema = z.object({
 });
 export type TFileCitationsPermissions = z.infer<typeof fileCitationsPermissionsSchema>;
 
+// [OMNIVENTUS-START] schema for the USER_ADMIN permission type (user administration feature)
+export const userAdminPermissionsSchema = z.object({
+  [Permissions.USE]: z.boolean().default(false),
+  [Permissions.DELETE]: z.boolean().default(false),
+});
+export type TUserAdminPermissions = z.infer<typeof userAdminPermissionsSchema>;
+// [OMNIVENTUS-END]
+
 // Define a single permissions schema that holds all permission types.
 export const permissionsSchema = z.object({
   [PermissionTypes.PROMPTS]: promptPermissionsSchema,
@@ -158,4 +174,6 @@ export const permissionsSchema = z.object({
   [PermissionTypes.MARKETPLACE]: marketplacePermissionsSchema,
   [PermissionTypes.FILE_SEARCH]: fileSearchPermissionsSchema,
   [PermissionTypes.FILE_CITATIONS]: fileCitationsPermissionsSchema,
+  // [OMNIVENTUS] user administration permission type
+  [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema,
 });

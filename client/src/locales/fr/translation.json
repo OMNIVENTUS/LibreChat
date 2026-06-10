@@ -184,15 +184,11 @@
   "com_auth_username": "Nom d'utilisateur",
   "com_auth_username_max_length": "Le nom d'utilisateur doit être inférieur à 20 caractères",
   "com_auth_username_min_length": "Le nom d'utilisateur doit comporter au moins 3 caractères",
-<<<<<<< HEAD
+  "com_auth_verify_your_identity": "Vérifiez votre identité",
   "com_auth_welcome_back": "Bienvenue à nouveau",
   "com_auth_welcome_by": "LibreChat ❤️ Lionel.Z",
-=======
-  "com_auth_verify_your_identity": "Vérifiez votre identité",
-  "com_auth_welcome_back": "Content de te revoir",
   "com_citation_more_details": "Plus d'informations sur {{label}}",
   "com_citation_source": "Source",
->>>>>>> main
   "com_click_to_download": "(cliquez ici pour télécharger)",
   "com_download_expired": "Téléchargement expiré",
   "com_download_expires": "(cliquez ici pour télécharger - expire le {{0}})",
@@ -360,18 +356,15 @@
   "com_files_filter": "Filtrer les fichiers...",
   "com_files_no_results": "Aucun résultat.",
   "com_files_number_selected": "{{0}} sur {{1}} fichier(s) sélectionné(s)",
-<<<<<<< HEAD
   "com_files_preload": "Préchargé",
   "com_files_shared": "Partagé",
   "com_files_unauthorized_delete_error": "Vous ne pouvez supprimer que vos propres fichiers",
   "com_files_delete_error": "Erreur lors de la suppression des fichiers",
-=======
   "com_files_preparing_download": "Préparation du téléchargement",
   "com_files_sharepoint_picker_title": "Sélectionner un fichier",
   "com_files_table": "quelquechose doit être renseigné ici. c'était vide",
   "com_files_upload_local_machine": "Depuis ordinateur local",
   "com_files_upload_sharepoint": "Depuis Sharepoint",
->>>>>>> main
   "com_generated_files": "Fichiers générés :",
   "com_files_delete_success": "Fichiers supprimés avec succès",
   "com_hide_examples": "Masquer les exemples",

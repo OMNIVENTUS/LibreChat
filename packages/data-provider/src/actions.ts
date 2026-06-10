@@ -316,12 +316,9 @@ class RequestExecutor {
 
   async execute() {
     const url = createURL(this.config.domain, this.path);
-<<<<<<< HEAD
-    const headers = {
-      ...this.customHeaders,
-=======
     const headers: Record<string, string> = {
->>>>>>> main
+      // [OMNIVENTUS] include custom/default headers (e.g. OpenAPI header params with defaults)
+      ...this.customHeaders,
       ...this.authHeaders,
       ...(this.config.contentType ? { 'Content-Type': this.config.contentType } : {}),
     };
@@ -382,11 +379,9 @@ export class ActionRequest {
     operation: string,
     isConsequential: boolean,
     contentType: string,
-<<<<<<< HEAD
-    defaultHeaders: Record<string, string> = {},
-=======
     parameterLocations?: Record<string, 'query' | 'path' | 'header' | 'body'>,
->>>>>>> main
+    // [OMNIVENTUS] default headers collected from OpenAPI header params
+    defaultHeaders: Record<string, string> = {},
   ) {
     this.config = new RequestConfig(
       domain,
@@ -395,11 +390,8 @@ export class ActionRequest {
       operation,
       isConsequential,
       contentType,
-<<<<<<< HEAD
       defaultHeaders,
-=======
       parameterLocations,
->>>>>>> main
     );
   }
 
@@ -520,34 +512,11 @@ export function openapiToFunction(
           const resolvedParam = resolveRef(
             param,
             openapiSpec.components,
-<<<<<<< HEAD
-          );
-
-          // Special handling for header parameters
-          if (paramObj.in === 'header') {
-            // If the header has a default value, add it to defaultHeaders
-            if (resolvedSchema.default !== undefined) {
-              defaultHeaders[paramObj.name] = String(resolvedSchema.default);
-            }
-
-            // Add the header parameter to the schema with 'header_' prefix to mark it as a header
-            parametersSchema.properties[`header_${paramObj.name}`] = resolvedSchema;
-            if (paramObj.required === true) {
-              parametersSchema.required.push(`header_${paramObj.name}`);
-            }
-          } else {
-            // Handle regular parameters (path, query, etc.) as before
-            parametersSchema.properties[paramObj.name] = resolvedSchema;
-            if (paramObj.required === true) {
-              parametersSchema.required.push(paramObj.name);
-            }
-=======
           ) as OpenAPIV3.ParameterObject;
 
           const paramName = resolvedParam.name;
           if (!paramName || !resolvedParam.schema) {
             continue;
->>>>>>> main
           }
 
           const paramSchema = resolveRef(
@@ -567,14 +536,15 @@ export function openapiToFunction(
             resolvedParam.in === 'body'
               ? resolvedParam.in
               : 'query';
+
+          // [OMNIVENTUS] header params with a default value are sent automatically
+          if (resolvedParam.in === 'header' && paramSchema.default !== undefined) {
+            defaultHeaders[paramName] = String(paramSchema.default);
+          }
         }
       }
 
-<<<<<<< HEAD
-      // Handle request body as before
-=======
       let contentType = '';
->>>>>>> main
       if (operationObj.requestBody) {
         const requestBody = operationObj.requestBody as RequestBodyObject;
         const content = requestBody.content;
@@ -616,13 +586,9 @@ export function openapiToFunction(
         method,
         operationId,
         !!(operationObj['x-openai-isConsequential'] ?? false),
-<<<<<<< HEAD
-        operationObj.requestBody ? 'application/json' : '',
-        defaultHeaders,  // Pass default headers to the ActionRequest
-=======
         contentType,
         paramLocations,
->>>>>>> main
+        defaultHeaders, // [OMNIVENTUS] pass default headers to the ActionRequest
       );
 
       requestBuilders[operationId] = actionRequest;

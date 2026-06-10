@@ -53,6 +53,11 @@ const rolePermissionsSchema = new Schema(
     [PermissionTypes.FILE_CITATIONS]: {
       [Permissions.USE]: { type: Boolean },
     },
+    // [OMNIVENTUS] user administration permission type
+    [PermissionTypes.USER_ADMIN]: {
+      [Permissions.USE]: { type: Boolean },
+      [Permissions.DELETE]: { type: Boolean },
+    },
   },
   { _id: false },
 );
