@@ -1,5 +1,34 @@
 this file will contain history and notes on files / paths / sections / methods that have been modified.
 
+### 2026-06-11 — Phase 1 recovery: fork checkpointed on upstream v0.8.1-rc2 (tag `fork-v0.8.1-rc2`)
+
+The v0.8.1-rc2 merge was committed, fixed forward, and verified green (builds, tests, boot).
+Customizations are now **in-place** in upstream files, fenced with `// [OMNIVENTUS]` comments.
+The `@omniventus/*` alias wiring was reverted (broken; reproducible from this folder) — see
+`DIAGNOSIS-2026-06-10.md` §4 and `recovery/STATE.md`. Current divergence ledger:
+
+[UPDATE] api/models/Message.js — contextualActions kept alongside upstream feedback
+[UPDATE] api/server/routes/config.js — fileAccessGroups in startup config payload
+[UPDATE] api/server/routes/files/files.js — admin exemption on delete (upstream flow kept)
+[UPDATE] api/server/index.js — initBusinessActions() + preloadFiles() at startup; /api/users mount
+[UPDATE] api/server/middleware/roles/index.js — checkStrictAdmin; checkAccess/generateCheckAccess re-exported from @librechat/api
+[UPDATE] api/server/controllers/UsersController.js — User model now from ~/db/models
+[UPDATE] api/server/services/Files/VectorDB/preload.js — imports fixed for v0.8.1 layout
+[UPDATE] packages/data-provider/src/permissions.ts — USER_ADMIN type, DELETE permission, userAdminPermissionsSchema (in-place, no longer an override)
+[UPDATE] packages/data-provider/src/roles.ts — MANAGER role re-expressed on upstream nested permissions structure (in-place, no longer an override)
+[UPDATE] packages/data-provider/src/api-endpoints.ts — users/updateUser/deleteUserById endpoints
+[UPDATE] packages/data-provider/src/actions.ts — defaultHeaders kept alongside upstream parameterLocations
+[UPDATE] packages/data-schemas/src/schema/file.ts — scope + access_control fields
+[UPDATE] packages/data-schemas/src/schema/user.ts — file_access_groups field
+[UPDATE] packages/data-schemas/src/schema/role.ts — USER_ADMIN permission sub-schema
+[UPDATE] packages/data-schemas/src/types/file.ts, types/user.ts — matching type fields
+[UPDATE] client/src/components/Chat/Input/ChatForm.tsx — SharedPromptList grafted into upstream v0.8.1 layout
+[UPDATE] client/src/components/Chat/Input/Files/Table/Columns.tsx — access_control column
+[OVERRIDE] client/src/components/ui/index.ts — compatibility barrel re-exporting @librechat/client + fork components (upstream deleted this folder)
+[UPDATE] client/src/components/ui/MultiSelectDropDown.tsx — restored from v0.7.7 (deleted upstream), deps from @librechat/client
+[UPDATE] client/src/{components/SidePanel/Users/Panel.tsx, components/Users/UserPanel.tsx, hooks/Files/useDeleteFilesFromTable.tsx} — useToastContext from @librechat/client
+[TO_REMOVE] omniventus/packages/* alias wiring docs below (kept as reference for Phase 2+; do not re-wire as-is)
+
 ### feat: Integrate Notion API Tools and Enhance Makefile
 
 [UPDATE] api/app/clients/tools/index.js
