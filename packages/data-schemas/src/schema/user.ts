@@ -146,6 +146,11 @@ const userSchema = new Schema<IUser>(
       type: String,
       sparse: true,
     },
+    // [OMNIVENTUS] groups that determine shared-file access permissions
+    file_access_groups: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true },
 );

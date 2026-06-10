@@ -74,6 +74,21 @@ const file: Schema<IMongoFile> = new Schema(
       type: Date,
       expires: 3600, // 1 hour in seconds
     },
+    // [OMNIVENTUS-START] shared/preloaded files: scope-based access control
+    scope: {
+      type: String,
+      enum: ['private', 'public', 'shared'],
+      default: 'private',
+    },
+    access_control: {
+      type: [
+        {
+          type: String, // user IDs or role names
+        },
+      ],
+      default: [],
+    },
+    // [OMNIVENTUS-END]
   },
   {
     timestamps: true,

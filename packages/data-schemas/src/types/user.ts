@@ -38,6 +38,8 @@ export interface IUser extends Document {
   updatedAt?: Date;
   /** Field for external source identification (for consistency with TPrincipal schema) */
   idOnTheSource?: string;
+  /** [OMNIVENTUS] groups that determine shared-file access permissions */
+  file_access_groups?: string[];
 }
 
 export interface BalanceConfig {

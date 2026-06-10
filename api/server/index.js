@@ -27,6 +27,8 @@ const initializeMCPs = require('./services/initializeMCPs');
 const configureSocialLogins = require('./socialLogins');
 const { getAppConfig } = require('./services/Config');
 const initBusinessActions = require('./services/initBusinessActions');
+// [OMNIVENTUS] RAG preload of shared files at startup
+const { preloadFiles } = require('./services/Files/VectorDB');
 const staticCache = require('./utils/staticCache');
 const noIndex = require('./middleware/noIndex');
 const { seedDatabase } = require('~/models');
@@ -63,6 +65,9 @@ const startServer = async () => {
   initializeFileStorage(appConfig);
   await performStartupChecks(appConfig);
   await updateInterfacePermissions(appConfig);
+
+  // [OMNIVENTUS] preload shared files into the RAG vector store (no-op without RAG_PRELOAD_PATH)
+  await preloadFiles();
 
   const indexPath = path.join(appConfig.paths.dist, 'index.html');
   let indexHTML = fs.readFileSync(indexPath, 'utf8');
