@@ -14,12 +14,6 @@ if (
   BASE_URL = baseEl?.getAttribute('href') || '/';
 }
 
-export const health = () => '/health';
-export const user = () => '/api/user';
-export const users = () => '/api/users';
-export const updateUser = (userId: string) => `${users()}/${userId}`;
-export const deleteUserById = (userId: string) => `${users()}/${userId}`;
-
 if (BASE_URL && BASE_URL.endsWith('/')) {
   BASE_URL = BASE_URL.slice(0, -1);
 }
@@ -47,6 +41,12 @@ const buildQuery = (params: Record<string, unknown>): string => {
 
 export const health = () => `${BASE_URL}/health`;
 export const user = () => `${BASE_URL}/api/user`;
+
+// [OMNIVENTUS-START] user administration endpoints
+export const users = () => `${BASE_URL}/api/users`;
+export const updateUser = (userId: string) => `${users()}/${userId}`;
+export const deleteUserById = (userId: string) => `${users()}/${userId}`;
+// [OMNIVENTUS-END]
 
 export const balance = () => `${BASE_URL}/api/balance`;
 

@@ -3,7 +3,7 @@ import { QueryKeys } from 'librechat-data-provider';
 import type { BatchFile, TFile } from 'librechat-data-provider';
 import { useDeleteFilesMutation } from '~/data-provider';
 import useFileDeletion from './useFileDeletion';
-import { useToastContext } from '~/Providers';
+import { useToastContext } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 
 export default function useDeleteFilesFromTable(callback?: () => void) {

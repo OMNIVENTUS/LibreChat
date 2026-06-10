@@ -1,6 +1,6 @@
 import { useGetUsers } from '~/data-provider/Users/queries';
 import { useDeleteUserMutation } from '~/data-provider/Users/mutations';
-import { useToastContext } from '~/Providers';
+import { useToastContext } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 
 import { columns } from './PanelColumns';
