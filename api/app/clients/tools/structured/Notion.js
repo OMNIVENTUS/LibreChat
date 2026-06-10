@@ -2,30 +2,24 @@ const { z } = require('zod');
 const { tool } = require('@langchain/core/tools');
 const { getApiKey } = require('./credentials');
 const { logger } = require('~/config');
-/**@deprecated */
+
 // Define common schema objects that can be reused
 const richTextTextSchema = z.object({
   type: z.literal('text'),
   text: z.object({
     content: z.string().describe('The text content'),
-    link: z
-      .object({
-        url: z.string().describe('URL of the link'),
-      })
-      .nullable()
-      .optional()
-      .describe('Link information if the text is a link'),
+    link: z.object({
+      url: z.string().describe('URL of the link'),
+    }).nullable().optional().describe('Link information if the text is a link'),
   }),
-  annotations: z
-    .object({
-      bold: z.boolean().default(false).describe('Whether the text is bold'),
-      italic: z.boolean().default(false).describe('Whether the text is italic'),
-      strikethrough: z.boolean().default(false).describe('Whether the text is strikethrough'),
-      underline: z.boolean().default(false).describe('Whether the text is underlined'),
-      code: z.boolean().default(false).describe('Whether the text is code format'),
-      color: z.string().default('default').describe('Color of the text'),
-    })
-    .optional(),
+  annotations: z.object({
+    bold: z.boolean().default(false).describe('Whether the text is bold'),
+    italic: z.boolean().default(false).describe('Whether the text is italic'),
+    strikethrough: z.boolean().default(false).describe('Whether the text is strikethrough'),
+    underline: z.boolean().default(false).describe('Whether the text is underlined'),
+    code: z.boolean().default(false).describe('Whether the text is code format'),
+    color: z.string().default('default').describe('Color of the text'),
+  }).optional(),
   plain_text: z.string().optional().describe('Plain text content'),
   href: z.string().nullable().optional().describe('URL of a link if present'),
 });
@@ -39,75 +33,40 @@ const richTextSchema = z.union([
 const richTextArraySchema = z.array(richTextSchema).describe('Array of rich text objects');
 
 // Schema for database filter
-const filterSchema = z
-  .object({})
-  .catchall(z.any())
-  .describe('Filter criteria for database queries');
+const filterSchema = z.object({}).catchall(z.any()).describe('Filter criteria for database queries');
 
 // Schema for sort
-const sortSchema = z
-  .object({
-    direction: z.enum(['ascending', 'descending']).optional().describe('Sort direction'),
-    timestamp: z
-      .enum(['created_time', 'last_edited_time'])
-      .optional()
-      .describe('Timestamp to sort by'),
-    property: z.string().optional().describe('Property to sort by'),
-  })
-  .describe('Sort criteria for queries');
+const sortSchema = z.object({
+  direction: z.enum(['ascending', 'descending']).optional().describe('Sort direction'),
+  timestamp: z.enum(['created_time', 'last_edited_time']).optional().describe('Timestamp to sort by'),
+  property: z.string().optional().describe('Property to sort by'),
+}).describe('Sort criteria for queries');
 
 // Icon schema
-const iconSchema = z
-  .object({
-    type: z.enum(['emoji', 'external']).describe('Type of icon'),
-    emoji: z.string().optional().describe('Emoji character (required if type is emoji)'),
-    external: z
-      .object({
-        url: z.string().describe('URL of external icon'),
-      })
-      .optional()
-      .describe('External icon information (required if type is external)'),
-  })
-  .describe('Icon object for pages or databases');
+const iconSchema = z.object({
+  type: z.enum(['emoji', 'external']).describe('Type of icon'),
+  emoji: z.string().optional().describe('Emoji character (required if type is emoji)'),
+  external: z.object({
+    url: z.string().describe('URL of external icon'),
+  }).optional().describe('External icon information (required if type is external)'),
+}).describe('Icon object for pages or databases');
 
 // Cover schema
-const coverSchema = z
-  .object({
-    type: z.literal('external').describe('Type of cover (only external is supported)'),
-    external: z
-      .object({
-        url: z.string().describe('URL of the external cover image'),
-      })
-      .describe('External cover image information'),
-  })
-  .describe('Cover object for pages or databases');
+const coverSchema = z.object({
+  type: z.literal('external').describe('Type of cover (only external is supported)'),
+  external: z.object({
+    url: z.string().describe('URL of the external cover image'),
+  }).describe('External cover image information'),
+}).describe('Cover object for pages or databases');
 
 // Block schema - More explicit definition of block types
 
 // Common color property used by many block types
-const colorSchema = z
-  .enum([
-    'default',
-    'gray',
-    'brown',
-    'orange',
-    'yellow',
-    'green',
-    'blue',
-    'purple',
-    'pink',
-    'red',
-    'gray_background',
-    'brown_background',
-    'orange_background',
-    'yellow_background',
-    'green_background',
-    'blue_background',
-    'purple_background',
-    'pink_background',
-    'red_background',
-  ])
-  .describe('Color of the block');
+const colorSchema = z.enum([
+  'default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red',
+  'gray_background', 'brown_background', 'orange_background', 'yellow_background',
+  'green_background', 'blue_background', 'purple_background', 'pink_background', 'red_background',
+]).describe('Color of the block');
 
 // Paragraph block
 const paragraphBlockSchema = z.object({
@@ -192,82 +151,16 @@ const codeBlockSchema = z.object({
   code: z.object({
     rich_text: richTextArraySchema,
     caption: richTextArraySchema.optional(),
-    language: z
-      .enum([
-        'abap',
-        'arduino',
-        'bash',
-        'basic',
-        'c',
-        'clojure',
-        'coffeescript',
-        'c++',
-        'c#',
-        'css',
-        'dart',
-        'diff',
-        'docker',
-        'elixir',
-        'elm',
-        'erlang',
-        'flow',
-        'fortran',
-        'f#',
-        'gherkin',
-        'glsl',
-        'go',
-        'graphql',
-        'groovy',
-        'haskell',
-        'html',
-        'java',
-        'javascript',
-        'json',
-        'julia',
-        'kotlin',
-        'latex',
-        'less',
-        'lisp',
-        'livescript',
-        'lua',
-        'makefile',
-        'markdown',
-        'markup',
-        'matlab',
-        'mermaid',
-        'nix',
-        'objective-c',
-        'ocaml',
-        'pascal',
-        'perl',
-        'php',
-        'plain text',
-        'powershell',
-        'prolog',
-        'protobuf',
-        'python',
-        'r',
-        'reason',
-        'ruby',
-        'rust',
-        'sass',
-        'scala',
-        'scheme',
-        'scss',
-        'shell',
-        'sql',
-        'swift',
-        'typescript',
-        'vb.net',
-        'verilog',
-        'vhdl',
-        'visual basic',
-        'webassembly',
-        'xml',
-        'yaml',
-        'java/c/c++/c#',
-      ])
-      .optional(),
+    language: z.enum([
+      'abap', 'arduino', 'bash', 'basic', 'c', 'clojure', 'coffeescript', 'c++', 'c#', 'css',
+      'dart', 'diff', 'docker', 'elixir', 'elm', 'erlang', 'flow', 'fortran', 'f#', 'gherkin',
+      'glsl', 'go', 'graphql', 'groovy', 'haskell', 'html', 'java', 'javascript', 'json',
+      'julia', 'kotlin', 'latex', 'less', 'lisp', 'livescript', 'lua', 'makefile', 'markdown',
+      'markup', 'matlab', 'mermaid', 'nix', 'objective-c', 'ocaml', 'pascal', 'perl', 'php',
+      'plain text', 'powershell', 'prolog', 'protobuf', 'python', 'r', 'reason', 'ruby', 'rust',
+      'sass', 'scala', 'scheme', 'scss', 'shell', 'sql', 'swift', 'typescript', 'vb.net',
+      'verilog', 'vhdl', 'visual basic', 'webassembly', 'xml', 'yaml', 'java/c/c++/c#',
+    ]).optional(),
   }),
 });
 
@@ -316,16 +209,12 @@ const tableBlockSchema = z.object({
     table_width: z.number(),
     has_column_header: z.boolean().optional().default(false),
     has_row_header: z.boolean().optional().default(false),
-    children: z
-      .array(
-        z.object({
-          type: z.literal('table_row'),
-          table_row: z.object({
-            cells: z.array(richTextArraySchema),
-          }),
-        }),
-      )
-      .optional(),
+    children: z.array(z.object({
+      type: z.literal('table_row'),
+      table_row: z.object({
+        cells: z.array(richTextArraySchema),
+      }),
+    })).optional(),
   }),
 });
 
@@ -364,33 +253,28 @@ const fileBlockSchema = z.object({
 });
 
 // Combine all block schemas into a union
-const blockSchema = z
-  .union([
-    paragraphBlockSchema,
-    heading1BlockSchema,
-    heading2BlockSchema,
-    heading3BlockSchema,
-    bulletedListItemSchema,
-    numberedListItemSchema,
-    todoBlockSchema,
-    toggleBlockSchema,
-    codeBlockSchema,
-    quoteBlockSchema,
-    calloutBlockSchema,
-    dividerBlockSchema,
-    tableBlockSchema,
-    imageBlockSchema,
-    videoBlockSchema,
-    fileBlockSchema,
-    // For other block types that we haven't explicitly defined
-    z
-      .object({
-        type: z.string().describe('Block type (e.g., bookmark, embed, etc.)'),
-      })
-      .catchall(z.any())
-      .describe('Other block types'),
-  ])
-  .describe('A block object representing content in Notion');
+const blockSchema = z.union([
+  paragraphBlockSchema,
+  heading1BlockSchema,
+  heading2BlockSchema,
+  heading3BlockSchema,
+  bulletedListItemSchema,
+  numberedListItemSchema,
+  todoBlockSchema,
+  toggleBlockSchema,
+  codeBlockSchema,
+  quoteBlockSchema,
+  calloutBlockSchema,
+  dividerBlockSchema,
+  tableBlockSchema,
+  imageBlockSchema,
+  videoBlockSchema,
+  fileBlockSchema,
+  // For other block types that we haven't explicitly defined
+  z.object({
+    type: z.string().describe('Block type (e.g., bookmark, embed, etc.)'),
+  }).catchall(z.any()).describe('Other block types'),
+]).describe('A block object representing content in Notion');
 
 const blockArraySchema = z.array(blockSchema).describe('Array of block objects');
 
@@ -406,7 +290,7 @@ async function notionRequest(endpoint, options, apiKey) {
     const response = await fetch(`https://api.notion.com${endpoint}`, {
       method: options.method || 'GET',
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'Notion-Version': '2022-06-28',
         ...options.headers,
@@ -418,11 +302,7 @@ async function notionRequest(endpoint, options, apiKey) {
       const errorData = await response.json().catch(() => ({}));
 
       // Provide more detailed error messages for common validation errors
-      if (
-        response.status === 400 &&
-        errorData.message &&
-        errorData.message.includes('validation_error')
-      ) {
+      if (response.status === 400 && errorData.message && errorData.message.includes('validation_error')) {
         // For rich_text related errors, provide more context
         if (errorData.message.includes('rich_text')) {
           logger.error(`Notion API validation error: ${errorData.message}`);
@@ -492,13 +372,8 @@ Example: database_id="8a3c7085-4e5e-4b89-9848-8eeac6e9a53d"`,
   );
 
   // Database properties schema
-  const databasePropertySchema = z
-    .object({})
-    .catchall(z.any())
-    .describe('Database property schema definition');
-  const databasePropertiesSchema = z
-    .record(databasePropertySchema)
-    .describe('Map of database property schemas');
+  const databasePropertySchema = z.object({}).catchall(z.any()).describe('Database property schema definition');
+  const databasePropertiesSchema = z.record(databasePropertySchema).describe('Map of database property schemas');
 
   // Page properties schema
   const pagePropertySchema = z.object({}).catchall(z.any()).describe('Page property value');
@@ -557,20 +432,14 @@ Example: database_id="8a3c7085-4e5e-4b89-9848-8eeac6e9a53d"`,
 Example: database_id="abc123" filter={"property":"Status","select":{"equals":"Active"}}`,
       schema: z.object({
         database_id: z.string().describe('The ID of the Notion database to query'),
-        filter: z
-          .union([
-            z.string().describe('Filter criteria as a JSON string that will be parsed'),
-            filterSchema,
-          ])
-          .optional()
-          .describe('Filter criteria as a JSON object or string'),
-        sorts: z
-          .union([
-            z.string().describe('Sort criteria as a JSON string that will be parsed'),
-            z.array(sortSchema),
-          ])
-          .optional()
-          .describe('Sort criteria as a JSON array or string'),
+        filter: z.union([
+          z.string().describe('Filter criteria as a JSON string that will be parsed'),
+          filterSchema,
+        ]).optional().describe('Filter criteria as a JSON object or string'),
+        sorts: z.union([
+          z.string().describe('Sort criteria as a JSON string that will be parsed'),
+          z.array(sortSchema),
+        ]).optional().describe('Sort criteria as a JSON array or string'),
         page_size: z.number().min(1).max(100).optional().describe('Number of results per page'),
         start_cursor: z.string().optional().describe('Pagination cursor'),
       }),
@@ -583,14 +452,12 @@ Example: database_id="abc123" filter={"property":"Status","select":{"equals":"Ac
       const body = {};
 
       if (title) {
-        body.title = Array.isArray(title)
-          ? title
-          : [
-              {
-                type: 'text',
-                text: { content: title },
-              },
-            ];
+        body.title = Array.isArray(title) ? title : [
+          {
+            type: 'text',
+            text: { content: title },
+          },
+        ];
       }
 
       if (properties) {
@@ -602,14 +469,12 @@ Example: database_id="abc123" filter={"property":"Status","select":{"equals":"Ac
       }
 
       if (description) {
-        body.description = Array.isArray(description)
-          ? description
-          : [
-              {
-                type: 'text',
-                text: { content: description },
-              },
-            ];
+        body.description = Array.isArray(description) ? description : [
+          {
+            type: 'text',
+            text: { content: description },
+          },
+        ];
       }
 
       const result = await notionRequest(
@@ -636,13 +501,10 @@ Example: database_id="abc123" properties={"Status":{"name":"New Status Name"}}`,
       schema: z.object({
         database_id: z.string().describe('The ID of the Notion database to update'),
         title: z.string().optional().describe('New title for the database'),
-        properties: z
-          .union([
-            z.string().describe('Properties schema as a JSON string that will be parsed'),
-            databasePropertiesSchema,
-          ])
-          .optional()
-          .describe('Properties schema as a JSON object or string'),
+        properties: z.union([
+          z.string().describe('Properties schema as a JSON string that will be parsed'),
+          databasePropertiesSchema,
+        ]).optional().describe('Properties schema as a JSON object or string'),
         description: z.string().optional().describe('New description for the database'),
       }),
     },
@@ -652,9 +514,7 @@ Example: database_id="abc123" properties={"Status":{"name":"New Status Name"}}`,
   const createDatabaseTool = tool(
     async ({ parent_id, title, properties, parent_type }) => {
       if (!parent_id || !title || !properties) {
-        throw new Error(
-          'Missing required parameters: parent_id, title, and properties are required',
-        );
+        throw new Error('Missing required parameters: parent_id, title, and properties are required');
       }
 
       let parsedProperties;
@@ -703,16 +563,11 @@ Example: parent_id="abc123" title="Tasks" properties={"Name":{"title":{}},"Statu
       schema: z.object({
         parent_id: z.string().describe('ID of parent page or workspace'),
         title: z.string().describe('Title of the new database'),
-        properties: z
-          .union([
-            z.string().describe('Database schema as a JSON string that will be parsed'),
-            databasePropertiesSchema,
-          ])
-          .describe('Database schema as a JSON object or string'),
-        parent_type: z
-          .enum(['page_id', 'workspace'])
-          .optional()
-          .describe('Type of parent (page_id or workspace)'),
+        properties: z.union([
+          z.string().describe('Database schema as a JSON string that will be parsed'),
+          databasePropertiesSchema,
+        ]).describe('Database schema as a JSON object or string'),
+        parent_type: z.enum(['page_id', 'workspace']).optional().describe('Type of parent (page_id or workspace)'),
       }),
     },
   );
@@ -775,23 +630,12 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
 
           // Explicitly check for rich_text since this is a common issue
           if (contentObj && contentObj.text && !contentObj.rich_text) {
-            logger.debug(
-              `Block validation error: ${contentKey}.rich_text is missing, but ${contentKey}.text is present. Notion requires rich_text.`,
-            );
+            logger.debug(`Block validation error: ${contentKey}.rich_text is missing, but ${contentKey}.text is present. Notion requires rich_text.`);
             return false;
           }
 
           // For heading blocks, explicitly verify rich_text exists
-          if (
-            [
-              'heading_1',
-              'heading_2',
-              'heading_3',
-              'paragraph',
-              'bulleted_list_item',
-              'numbered_list_item',
-            ].includes(contentKey)
-          ) {
+          if (['heading_1', 'heading_2', 'heading_3', 'paragraph', 'bulleted_list_item', 'numbered_list_item'].includes(contentKey)) {
             if (!contentObj || !contentObj.rich_text || !Array.isArray(contentObj.rich_text)) {
               logger.debug(`Block validation error: ${contentKey}.rich_text must be an array`);
               return false;
@@ -800,9 +644,7 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
             // Verify rich_text items have proper structure
             for (const [idx, item] of contentObj.rich_text.entries()) {
               if (!item.type || !item.text || typeof item.text.content !== 'string') {
-                logger.debug(
-                  `Block validation error: ${contentKey}.rich_text[${idx}] is missing required fields (type, text.content)`,
-                );
+                logger.debug(`Block validation error: ${contentKey}.rich_text[${idx}] is missing required fields (type, text.content)`);
                 return false;
               }
             }
@@ -814,21 +656,12 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
 
       return true;
     } catch (error) {
-      logger.debug('Block validation exception', {
-        error: error.message,
-        block: JSON.stringify(block).substring(0, 200),
-      });
+      logger.debug('Block validation exception', { error: error.message, block: JSON.stringify(block).substring(0, 200) });
 
       // Fallback to basic validation if schema validation fails
-      if (!block || typeof block !== 'object') {
-        return false;
-      }
-      if (!block.type || typeof block.type !== 'string') {
-        return false;
-      }
-      if (!block[block.type]) {
-        return false;
-      }
+      if (!block || typeof block !== 'object') {return false;}
+      if (!block.type || typeof block.type !== 'string') {return false;}
+      if (!block[block.type]) {return false;}
 
       // Additional basic checks
       const blockType = block.type;
@@ -836,9 +669,7 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
 
       // Check for text vs rich_text confusion
       if (content && content.text && !content.rich_text) {
-        logger.debug(
-          `Fallback validation error: ${blockType}.rich_text is required, but only ${blockType}.text was provided`,
-        );
+        logger.debug(`Fallback validation error: ${blockType}.rich_text is required, but only ${blockType}.text was provided`);
         return false;
       }
 
@@ -865,9 +696,7 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
       try {
         parentInfo = await fetchParentInfo(parent_id, parentType);
       } catch (error) {
-        throw new Error(
-          `Failed to fetch parent information: ${error.message}. Please verify the parent_id and parent_type are correct.`,
-        );
+        throw new Error(`Failed to fetch parent information: ${error.message}. Please verify the parent_id and parent_type are correct.`);
       }
 
       // Parse properties
@@ -891,22 +720,16 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
           if (propConfig.type === 'title') {
             titlePropertyName = propName;
             if (!providedPropertyNames.includes(propName)) {
-              throw new Error(
-                `Missing required title property '${propName}' for this database. The database requires these properties: ${dbPropertyNames.join(', ')}`,
-              );
+              throw new Error(`Missing required title property '${propName}' for this database. The database requires these properties: ${dbPropertyNames.join(', ')}`);
             }
             break;
           }
         }
 
         // Check for unknown properties
-        const unknownProps = providedPropertyNames.filter(
-          (prop) => !dbPropertyNames.includes(prop),
-        );
+        const unknownProps = providedPropertyNames.filter(prop => !dbPropertyNames.includes(prop));
         if (unknownProps.length > 0) {
-          throw new Error(
-            `Unknown properties: ${unknownProps.join(', ')}. This database accepts these properties: ${dbPropertyNames.join(', ')}`,
-          );
+          throw new Error(`Unknown properties: ${unknownProps.join(', ')}. This database accepts these properties: ${dbPropertyNames.join(', ')}`);
         }
       } else if (parentType === 'page_id') {
         // For pages, only title is allowed as a property
@@ -942,9 +765,7 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
         // Validate each block in the children array
         for (const [index, block] of parsedChildren.entries()) {
           if (!isValidBlockObject(block)) {
-            throw new Error(
-              `Invalid block object at index ${index}. Each block must be an object with a 'type' property and a corresponding property of the same name.`,
-            );
+            throw new Error(`Invalid block object at index ${index}. Each block must be an object with a 'type' property and a corresponding property of the same name.`);
           }
         }
 
@@ -1020,8 +841,7 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
     },
     {
       name: 'notion_create_page',
-      description:
-        'Create a Notion page with properties and content under a parent page or database.',
+      description: 'Create a Notion page with properties and content under a parent page or database.',
       description_for_model: `// Create a new Notion page with properties and content
 // Required: parent_id (ID of parent page/database)
 // Required: properties (JSON object with page properties)
@@ -1084,41 +904,23 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
 // ]`,
       schema: z.object({
         parent_id: z.string().describe('ID of parent page or database'),
-        properties: z
-          .union([
-            z.string().describe('Page properties as a JSON string that will be parsed'),
-            z.record(z.any()).describe('Page properties as a JSON object'),
-          ])
-          .describe(
-            'Page properties as a JSON object or string. For database parents, must match database schema. For page parents, only "title" is allowed.',
-          ),
-        parent_type: z
-          .enum(['page_id', 'database_id'])
-          .optional()
-          .describe('Type of parent (page_id or database_id)'),
-        children: z
-          .union([
-            z.string().describe('Page content blocks as a JSON string that will be parsed'),
-            z.array(z.record(z.any())).describe('Array of content blocks'),
-          ])
-          .optional()
-          .describe(
-            'Page content blocks as a JSON array. Each block must have a "type" property and a corresponding property of the same name.',
-          ),
-        icon: z
-          .union([
-            z.string().describe('Icon as a JSON string that will be parsed'),
-            z.record(z.any()).describe('Icon object'),
-          ])
-          .optional()
-          .describe('Page icon as a JSON object with type "emoji" or "external"'),
-        cover: z
-          .union([
-            z.string().describe('Cover as a JSON string that will be parsed'),
-            z.record(z.any()).describe('Cover object'),
-          ])
-          .optional()
-          .describe('Page cover as a JSON object with type "external"'),
+        properties: z.union([
+          z.string().describe('Page properties as a JSON string that will be parsed'),
+          z.record(z.any()).describe('Page properties as a JSON object'),
+        ]).describe('Page properties as a JSON object or string. For database parents, must match database schema. For page parents, only "title" is allowed.'),
+        parent_type: z.enum(['page_id', 'database_id']).optional().describe('Type of parent (page_id or database_id)'),
+        children: z.union([
+          z.string().describe('Page content blocks as a JSON string that will be parsed'),
+          z.array(z.record(z.any())).describe('Array of content blocks'),
+        ]).optional().describe('Page content blocks as a JSON array. Each block must have a "type" property and a corresponding property of the same name.'),
+        icon: z.union([
+          z.string().describe('Icon as a JSON string that will be parsed'),
+          z.record(z.any()).describe('Icon object'),
+        ]).optional().describe('Page icon as a JSON object with type "emoji" or "external"'),
+        cover: z.union([
+          z.string().describe('Cover as a JSON string that will be parsed'),
+          z.record(z.any()).describe('Cover object'),
+        ]).optional().describe('Page cover as a JSON object with type "external"'),
       }),
     },
   );
@@ -1219,22 +1021,19 @@ Example: page_id="c4d39556-6364-46a1-8a61-ebbb668f7445"`,
 Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} archived=false`,
       schema: z.object({
         page_id: z.string().describe('The ID of the Notion page to update'),
-        properties: z
-          .union([
-            z.string().describe('Properties to update as a JSON string that will be parsed'),
-            pagePropertiesSchema,
-          ])
-          .optional()
-          .describe('Properties to update as a JSON object or string'),
+        properties: z.union([
+          z.string().describe('Properties to update as a JSON string that will be parsed'),
+          pagePropertiesSchema,
+        ]).optional().describe('Properties to update as a JSON object or string'),
         archived: z.boolean().optional().describe('Whether the page should be archived'),
-        icon: z
-          .union([z.string().describe('Icon as a JSON string that will be parsed'), iconSchema])
-          .optional()
-          .describe('Page icon as a JSON object with type "emoji" or "external"'),
-        cover: z
-          .union([z.string().describe('Cover as a JSON string that will be parsed'), coverSchema])
-          .optional()
-          .describe('Page cover as a JSON object with type "external"'),
+        icon: z.union([
+          z.string().describe('Icon as a JSON string that will be parsed'),
+          iconSchema,
+        ]).optional().describe('Page icon as a JSON object with type "emoji" or "external"'),
+        cover: z.union([
+          z.string().describe('Cover as a JSON string that will be parsed'),
+          coverSchema,
+        ]).optional().describe('Page cover as a JSON object with type "external"'),
       }),
     },
   );
@@ -1266,29 +1065,19 @@ Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} 
       // Validate each block in the children array
       for (const [index, block] of parsedChildren.entries()) {
         if (!isValidBlockObject(block)) {
-          throw new Error(
-            `Invalid block object at index ${index}. Each block must be an object with a 'type' property and a corresponding property of the same name.`,
-          );
+          throw new Error(`Invalid block object at index ${index}. Each block must be an object with a 'type' property and a corresponding property of the same name.`);
         }
 
         // Check if the block has nested children and validate those too
         if (block.children && Array.isArray(block.children)) {
           for (const [childIndex, childBlock] of block.children.entries()) {
             if (!isValidBlockObject(childBlock)) {
-              throw new Error(
-                `Invalid nested block object at parent index ${index}, child index ${childIndex}. Each block must have a 'type' property and a corresponding property of the same name.`,
-              );
+              throw new Error(`Invalid nested block object at parent index ${index}, child index ${childIndex}. Each block must have a 'type' property and a corresponding property of the same name.`);
             }
 
             // Notion API allows a maximum of 2 levels of nesting
-            if (
-              childBlock.children &&
-              Array.isArray(childBlock.children) &&
-              childBlock.children.length > 0
-            ) {
-              throw new Error(
-                `Nested blocks cannot have their own children (at parent index ${index}, child index ${childIndex}). The Notion API only allows 2 levels of nesting.`,
-              );
+            if (childBlock.children && Array.isArray(childBlock.children) && childBlock.children.length > 0) {
+              throw new Error(`Nested blocks cannot have their own children (at parent index ${index}, child index ${childIndex}). The Notion API only allows 2 levels of nesting.`);
             }
           }
         }
@@ -1391,14 +1180,10 @@ Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} 
 // ]`,
       schema: z.object({
         block_id: z.string().describe('ID of the block or page to append children to'),
-        children: z
-          .union([
-            z.string().describe('JSON string of block objects that will be parsed'),
-            z.array(z.record(z.any())).describe('Array of content blocks'),
-          ])
-          .describe(
-            'Content blocks as a JSON array or string. Each block must have a "type" property and a corresponding property of the same name.',
-          ),
+        children: z.union([
+          z.string().describe('JSON string of block objects that will be parsed'),
+          z.array(z.record(z.any())).describe('Array of content blocks'),
+        ]).describe('Content blocks as a JSON array or string. Each block must have a "type" property and a corresponding property of the same name.'),
         after: z.string().optional().describe('ID of the block to insert the new blocks after'),
       }),
     },
@@ -1471,20 +1256,14 @@ Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} 
 // query="task" sort={"direction":"ascending","timestamp":"last_edited_time"}`,
       schema: z.object({
         query: z.string().optional().describe('Text to search for in titles and content'),
-        filter: z
-          .union([
-            z.string().describe('Filter criteria as a JSON string that will be parsed'),
-            z.record(z.any()).describe('Filter object'),
-          ])
-          .optional()
-          .describe('Filter to apply to the search results'),
-        sort: z
-          .union([
-            z.string().describe('Sort criteria as a JSON string that will be parsed'),
-            z.record(z.any()).describe('Sort object'),
-          ])
-          .optional()
-          .describe('Sort order for search results'),
+        filter: z.union([
+          z.string().describe('Filter criteria as a JSON string that will be parsed'),
+          z.record(z.any()).describe('Filter object'),
+        ]).optional().describe('Filter to apply to the search results'),
+        sort: z.union([
+          z.string().describe('Sort criteria as a JSON string that will be parsed'),
+          z.record(z.any()).describe('Sort object'),
+        ]).optional().describe('Sort order for search results'),
         start_cursor: z.string().optional().describe('Pagination cursor from a previous response'),
         page_size: z.number().min(1).max(100).optional().describe('Number of results per page'),
       }),
@@ -1615,17 +1394,12 @@ Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} 
 // parent_id="abc123" parent_type="page_id" rich_text=[{"type":"text","text":{"content":"This is "}},{"type":"text","text":{"content":"important"},"annotations":{"bold":true}}]`,
       schema: z.object({
         parent_id: z.string().optional().describe('ID of the page or block to comment on'),
-        parent_type: z
-          .enum(['page_id', 'block_id'])
-          .optional()
-          .describe('Type of parent (page_id or block_id)'),
+        parent_type: z.enum(['page_id', 'block_id']).optional().describe('Type of parent (page_id or block_id)'),
         discussion_id: z.string().optional().describe('ID of existing discussion thread'),
-        rich_text: z
-          .union([
-            z.string().describe('Simple text content that will be converted to rich text format'),
-            z.array(z.record(z.any())).describe('Rich text array for formatted text'),
-          ])
-          .describe('Comment text content as either a simple string or rich text array'),
+        rich_text: z.union([
+          z.string().describe('Simple text content that will be converted to rich text format'),
+          z.array(z.record(z.any())).describe('Rich text array for formatted text'),
+        ]).describe('Comment text content as either a simple string or rich text array'),
       }),
     },
   );
@@ -1673,10 +1447,7 @@ Example: page_id="abc123" properties={"Status":{"select":{"name":"Completed"}}} 
 // Example: block_id="abc123" page_size=50`,
       schema: z.object({
         block_id: z.string().describe('ID of the parent block or page to retrieve children from'),
-        page_size: z
-          .number()
-          .optional()
-          .describe('Number of items to return (default: 100, max: 100)'),
+        page_size: z.number().optional().describe('Number of items to return (default: 100, max: 100)'),
         start_cursor: z.string().optional().describe('Pagination cursor from a previous response'),
       }),
     },

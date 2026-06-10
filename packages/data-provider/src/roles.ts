@@ -25,17 +25,28 @@ export enum SystemRoles {
    */
   ADMIN = 'ADMIN',
   /**
+   * The Manager role - between Admin and User
+   */
+  MANAGER = 'MANAGER',
+  /**
    * The default user role
    */
   USER = 'USER',
 }
-
+export type TPromptPermissions = z.infer<typeof promptPermissionsSchema>;
+export type TBookmarkPermissions = z.infer<typeof bookmarkPermissionsSchema>;
+export type TMultiConvoPermissions = z.infer<typeof multiConvoPermissionsSchema>;
+export type TTemporaryChatPermissions = z.infer<typeof temporaryChatPermissionsSchema>;
+export type TRunCodePermissions = z.infer<typeof runCodePermissionsSchema>;
+export type TUserAdminPermissions = z.infer<typeof userAdminPermissionsSchema>;
+=======
 export const roleSchema = z.object({
   name: z.string(),
   permissions: permissionsSchema,
 });
 
 export type TRole = z.infer<typeof roleSchema>;
+>>>>>>> main
 
 const defaultRolesSchema = z.object({
   [SystemRoles.ADMIN]: roleSchema.extend({
@@ -89,6 +100,41 @@ const defaultRolesSchema = z.object({
       [PermissionTypes.FILE_CITATIONS]: fileCitationsPermissionsSchema.extend({
         [Permissions.USE]: z.boolean().default(true),
       }),
+    }),
+    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.DELETE]: z.boolean().default(true),
+    }),
+  }),
+  [SystemRoles.MANAGER]: roleSchema.extend({
+    name: z.literal(SystemRoles.MANAGER),
+    [PermissionTypes.PROMPTS]: promptPermissionsSchema.extend({
+      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.CREATE]: z.boolean().default(true),
+      // [Permissions.SHARE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.BOOKMARKS]: bookmarkPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.AGENTS]: agentPermissionsSchema.extend({
+      [Permissions.SHARED_GLOBAL]: z.boolean().default(true),
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.CREATE]: z.boolean().default(true),
+      // [Permissions.SHARE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.MULTI_CONVO]: multiConvoPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.TEMPORARY_CHAT]: temporaryChatPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.RUN_CODE]: runCodePermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+    }),
+    [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+      [Permissions.USE]: z.boolean().default(true),
+      [Permissions.DELETE]: z.boolean().default(true),
     }),
   }),
   [SystemRoles.USER]: roleSchema.extend({

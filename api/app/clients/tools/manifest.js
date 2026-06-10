@@ -1,5 +1,4 @@
-//const availableTools = require('./manifest.json');
-const availableTools = require('@omniventus/api/app/clients/tools/manifest');
+const availableTools = require('./manifest.json');
 
 /** @type {Record<string, TPlugin | undefined>} */
 const manifestToolMap = {};

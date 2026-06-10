@@ -1,4 +1,3 @@
-
 /* config */
 export * from './azure';
 export * from './bedrock';
@@ -16,11 +15,8 @@ export * from './models';
 /* mcp */
 export * from './mcp';
 /* RBAC */
-//OMNIVENTUS ADDITION
-//export * from './permissions';
-//export * from './roles';
-export * from '@omniventus/data-provider/permissions';
-export * from '@omniventus/data-provider/roles';
+export * from './permissions';
+export * from './roles';
 /* types (exports schemas from `./types` as they contain needed in other defs) */
 export * from './types';
 export * from './types/agents';

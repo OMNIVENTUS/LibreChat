@@ -5,8 +5,7 @@
   "workspaces": [
     "api",
     "client",
-    "packages/*",
-    "omniventus/packages/*"
+    "packages/*"
   ],
   "scripts": {
     "update": "node config/update.js",

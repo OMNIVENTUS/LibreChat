@@ -40,15 +40,20 @@ function createContextHandlers(req, userMessageContent) {
       body.entity_id = 'public';
     }
 
-    return axios.post(`${process.env.RAG_API_URL}/query`, body, {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-        'Content-Type': 'application/json',
+    return axios.post(
+      `${process.env.RAG_API_URL}/query`,
+      body,
+      {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
   };
 
   const processFile = async (file) => {
+
     if (file.embedded && !processedIds.has(file.file_id)) {
       try {
         const promise = query(file);
@@ -62,6 +67,7 @@ function createContextHandlers(req, userMessageContent) {
   };
 
   const createContext = async () => {
+
     try {
       if (!queryPromises.length || !processedFiles.length) {
         return '';

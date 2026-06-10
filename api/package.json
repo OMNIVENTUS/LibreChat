@@ -24,8 +24,7 @@
   "author": "",
   "license": "ISC",
   "_moduleAliases": {
-    "~": ".",
-    "@omniventus/*": "../omniventus/*"
+    "~": "."
   },
   "imports": {
     "~/*": "./*"
