@@ -14,6 +14,8 @@ import {
   temporaryChatPermissionsSchema,
   peoplePickerPermissionsSchema,
   fileCitationsPermissionsSchema,
+// *** OMNIVENTUS ADDITION ***
+  userAdminPermissionsSchema,
 } from './permissions';
 
 /**
@@ -28,6 +30,8 @@ export enum SystemRoles {
    * The default user role
    */
   USER = 'USER',
+  // *** OMNIVENTUS ADDITION ***
+  MANAGER = 'MANAGER',
 }
 
 export const roleSchema = z.object({
@@ -89,11 +93,26 @@ const defaultRolesSchema = z.object({
       [PermissionTypes.FILE_CITATIONS]: fileCitationsPermissionsSchema.extend({
         [Permissions.USE]: z.boolean().default(true),
       }),
+      // *** OMNIVENTUS ADDITION ***
+      [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.DELETE]: z.boolean().default(true),
+      }),
     }),
   }),
   [SystemRoles.USER]: roleSchema.extend({
     name: z.literal(SystemRoles.USER),
     permissions: permissionsSchema,
+  }),
+  // *** OMNIVENTUS ADDITION ***
+  [SystemRoles.MANAGER]: roleSchema.extend({
+    name: z.literal(SystemRoles.MANAGER),
+    permissions: permissionsSchema.extend({
+      [PermissionTypes.USER_ADMIN]: userAdminPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+        [Permissions.DELETE]: z.boolean().default(true),
+      }),
+    }),
   }),
 });
 
@@ -147,6 +166,11 @@ export const roleDefaults = defaultRolesSchema.parse({
       [PermissionTypes.FILE_CITATIONS]: {
         [Permissions.USE]: true,
       },
+      // *** OMNIVENTUS ADDITION ***
+      [PermissionTypes.USER_ADMIN]: {
+        [Permissions.USE]: true,
+        [Permissions.DELETE]: true,
+      },
     },
   },
   [SystemRoles.USER]: {
@@ -169,7 +193,19 @@ export const roleDefaults = defaultRolesSchema.parse({
         [Permissions.USE]: false,
       },
       [PermissionTypes.FILE_SEARCH]: {},
-      [PermissionTypes.FILE_CITATIONS]: {},
+        [PermissionTypes.FILE_CITATIONS]: {},
+      // *** OMNIVENTUS ADDITION ***
+      [PermissionTypes.USER_ADMIN]: {},
+    },
+  },
+  // *** OMNIVENTUS ADDITION ***
+  [SystemRoles.MANAGER]: {
+    name: SystemRoles.MANAGER,
+    permissions: {
+      [PermissionTypes.USER_ADMIN]: {
+        [Permissions.USE]: true,
+        [Permissions.DELETE]: true,
+      },
     },
   },
 });

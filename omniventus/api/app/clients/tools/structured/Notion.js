@@ -2,7 +2,7 @@ const { z } = require('zod');
 const { tool } = require('@langchain/core/tools');
 const { getApiKey } = require('./credentials');
 const { logger } = require('~/config');
-/**@deprecated */
+
 // Define common schema objects that can be reused
 const richTextTextSchema = z.object({
   type: z.literal('text'),

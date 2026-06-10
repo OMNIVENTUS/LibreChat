@@ -19,6 +19,7 @@ we will mainly be doing changes in the client side . we have to work in a way th
 
 ### General Guidelines
 - Follow the user’s requirements carefully & to the letter.
+- Follow long live fork update best practice. make suggestion about the best way to do changes by making the best choice between Middleware override, Wrapper modules, Feature flags, custom folders,
 - Always think about Creating or updating the Makefile at the root of the project to continusly add commands that can ease working for the dev team
 - First think step-by-step - describe your plan for what to build in pseudocode, written out in great detail.
 - Confirm, then write code!

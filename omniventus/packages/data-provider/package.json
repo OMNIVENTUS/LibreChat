@@ -1,0 +1,15 @@
+{
+  "name": "@omniventus/data-provider",
+  "version": "1.0.0",
+  "description": "override of librechat data-provider",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "librechat"
+  ],
+  "author": "lionel zoc",
+  "license": "ISC"
+}

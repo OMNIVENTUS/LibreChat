@@ -1,0 +1,17 @@
+{
+  "name": "@omniventus/api",
+  "version": "1.0.0",
+  "description": "override of librechat api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "_moduleAliases": {
+    "@librechat/main-api": "../api/*"
+  },
+  "keywords": [
+    "librechat"
+  ],
+  "author": "lionel zoc",
+  "license": "ISC"
+}
