@@ -1,4 +1,5 @@
-const User = require('~/models/User');
+// [OMNIVENTUS] User model now provided via data-schemas createModels (upstream v0.8.x layout)
+const { User } = require('~/db/models');
 const { logger } = require('~/config');
 const { SystemRoles } = require('librechat-data-provider');
 
