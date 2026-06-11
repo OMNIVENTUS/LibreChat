@@ -10,11 +10,11 @@ Monitoring sessions may read this file but never write to the repo.
 
 ## Current
 
-- phase: 1
-- status: done               <!-- not-started | in-progress | done | blocked -->
-- owner: claude-code session 2026-06-10
+- phase: 2
+- status: in-progress        <!-- not-started | in-progress | done | blocked -->
+- owner: claude-code session 2026-06-11
 - updated: 2026-06-11
-- last_commit: a0c7420b3     <!-- last recovery commit sha (see log for close-out commit) -->
+- last_commit: d21154eb3     <!-- last recovery commit sha (see log for close-out commit) -->
 - blocker: —                 <!-- required when status=blocked: what and why -->
 
 ## Phase index
@@ -22,7 +22,7 @@ Monitoring sessions may read this file but never write to the repo.
 | Phase | Mission file | Goal | Status |
 |---|---|---|---|
 | 1 | [PHASE-1-GOAL.md](PHASE-1-GOAL.md) | Commit everything + fix-forward to green, bootable v0.8.1-rc2 checkpoint | done |
-| 2 | [PHASE-2-GOAL.md](PHASE-2-GOAL.md) | Merge upstream v0.8.6 from the checkpoint, modernize features | not-started (HUMAN REVIEW REQUIRED before starting) |
+| 2 | [PHASE-2-GOAL.md](PHASE-2-GOAL.md) | Merge upstream v0.8.6 from the checkpoint, modernize features | in-progress |
 
 ## Log
 
@@ -33,3 +33,4 @@ Monitoring sessions may read this file but never write to the repo.
 - 2026-06-10 — B3+B4: scope/access_control + file_access_groups schema fields restored; preloadFiles() bootstrap re-wired (15a3c555a).
 - 2026-06-11 — C: client build fixed (ui barrel shim, endpoint dedupe, MultiSelectDropDown restore) (2cd7829a0); api fixes (roles middleware, UsersController, stale bedrock mount) (a0c7420b3).
 - 2026-06-11 — phase 1 DONE. Evidence: git status clean+pushed; zero conflict markers; build:packages exit 0; npm run frontend exit 0; test:api 1636 passed exit 0; test:client 816 passed exit 0; backend boot vs local Docker mongo → /health 200; all feature-integrity greps pass; tag fork-v0.8.1-rc2.
+- 2026-06-11 — phase 2 STARTED (human review completed, tag pinned: v0.8.6 = 566e20b61). Branch merge/upstream-v0.8.6 from fork-v0.8.1-rc2 (d21154eb3).
