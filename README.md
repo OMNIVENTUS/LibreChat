@@ -8,6 +8,11 @@
 </p>
 
 <p align="center">
+  <strong>English</strong> ·
+  <a href="README.zh.md">中文</a>
+</p>
+
+<p align="center">
   <a href="https://discord.librechat.ai"> 
     <img
       src="https://img.shields.io/discord/1086345563026489514?label=&logo=discord&style=for-the-badge&logoWidth=20&logoColor=white&labelColor=000000&color=blueviolet">
@@ -27,8 +32,8 @@
 </p>
 
 <p align="center">
-<a href="https://railway.app/template/b5k2mn?referralCode=HI9hWz">
-  <img src="https://railway.app/button.svg" alt="Deploy on Railway" height="30">
+<a href="https://railway.com/deploy/librechat-official?referralCode=HI9hWz&utm_medium=integration&utm_source=readme&utm_campaign=librechat">
+  <img src="https://railway.com/button.svg" alt="Deploy on Railway" height="30">
 </a>
 <a href="https://zeabur.com/templates/0X2ZY8">
   <img src="https://zeabur.com/button.svg" alt="Deploy on Zeabur" height="30"/>
@@ -46,16 +51,10 @@
   </a>
 </p>
 
+
 # ✨ Features
 
 - 🖥️ **UI & Experience** inspired by ChatGPT with enhanced design and features
-
-- 💼 **Business Actions**:
-
-  - Contextual action buttons displayed above AI responses
-  - Integration with external services based on conversation context
-  - Built-in support for movie recommendations via TMDB
-  - Extensible provider system for custom actions
 
 - 🤖 **AI Model Selection**:  
   - Anthropic (Claude), AWS Bedrock, OpenAI, Azure OpenAI, Google, Vertex AI, OpenAI Responses API (incl. Azure)
@@ -64,19 +63,19 @@
     - Ollama, groq, Cohere, Mistral AI, Apple MLX, koboldcpp, together.ai,
     - OpenRouter, Helicone, Perplexity, ShuttleAI, Deepseek, Qwen, and more
 
-- 🔧 **[Code Interpreter API](https://www.librechat.ai/docs/features/code_interpreter)**:
-
+- 🔧 **[Code Interpreter API](https://www.librechat.ai/docs/features/code_interpreter)**: 
   - Secure, Sandboxed Execution in Python, Node.js (JS/TS), Go, C/C++, Java, PHP, Rust, and Fortran
   - Seamless File Handling: Upload, process, and download files directly
   - No Privacy Concerns: Fully isolated and secure execution
 
-- 🔦 **Agents & Tools Integration**:
-
+- 🔦 **Agents & Tools Integration**:  
   - **[LibreChat Agents](https://www.librechat.ai/docs/features/agents)**:
     - No-Code Custom Assistants: Build specialized, AI-driven helpers
     - Agent Marketplace: Discover and deploy community-built agents
     - Collaborative Sharing: Share agents with specific users and groups
     - Flexible & Extensible: Use MCP Servers, tools, file search, code execution, and more
+    - [Skills](https://www.librechat.ai/docs/features/skills): Create reusable `SKILL.md` instruction bundles for manual, automatic, or always-on agent workflows
+    - [Subagents](https://www.librechat.ai/docs/features/subagents): Delegate focused work to isolated child agent runs with their own context windows
     - Compatible with Custom Endpoints, OpenAI, Azure, Anthropic, AWS Bedrock, Google, Vertex AI, Responses API, and more
     - [Model Context Protocol (MCP) Support](https://modelcontextprotocol.io/clients#librechat) for Tools
 
@@ -86,8 +85,7 @@
   - **Customizable Jina Reranking**: Configure custom Jina API URLs for reranking services
   - **[Learn More →](https://www.librechat.ai/docs/features/web_search)**
 
-- 🪄 **Generative UI with Code Artifacts**:
-
+- 🪄 **Generative UI with Code Artifacts**:  
   - [Code Artifacts](https://youtu.be/GfTj7O4gmd0?si=WJbdnemZpJzBrJo3) allow creation of React, HTML, and Mermaid diagrams directly in chat
 
 - 🎨 **Image Generation & Editing**
@@ -112,63 +110,59 @@
   - Türkçe, Nederlands, עברית, Català, Čeština, Dansk, Eesti, فارسی
   - Suomi, Magyar, Հայերեն, Bahasa Indonesia, ქართული, Latviešu, ไทย, ئۇيغۇرچە
 
-- 🧠 **Reasoning UI**:
-
+- 🧠 **Reasoning UI**:  
   - Dynamic Reasoning UI for Chain-of-Thought/Reasoning AI models like DeepSeek-R1
 
-- 🎨 **Customizable Interface**:
-
+- 🎨 **Customizable Interface**:  
   - Customizable Dropdown & Interface that adapts to both power users and newcomers
 
-- 🗣️ **Speech & Audio**:
+- 🌊 **[Resumable Streams](https://www.librechat.ai/docs/features/resumable_streams)**:  
+  - Never lose a response: AI responses automatically reconnect and resume if your connection drops
+  - Multi-Tab & Multi-Device Sync: Open the same chat in multiple tabs or pick up on another device
+  - Production-Ready: Works from single-server setups to horizontally scaled deployments with Redis
 
-  - Chat hands-free with Speech-to-Text and Text-to-Speech
-  - Automatically send and play Audio
+- 🗣️ **Speech & Audio**:  
+  - Chat hands-free with Speech-to-Text and Text-to-Speech  
+  - Automatically send and play Audio  
   - Supports OpenAI, Azure OpenAI, and Elevenlabs
 
-- 📥 **Import & Export Conversations**:
-
-  - Import Conversations from LibreChat, ChatGPT, Chatbot UI
+- 📥 **Import & Export Conversations**:  
+  - Import Conversations from LibreChat, ChatGPT, Chatbot UI  
   - Export conversations as screenshots, markdown, text, json
 
-- 🔍 **Search & Discovery**:
-
+- 🔍 **Search & Discovery**:  
   - Search all messages/conversations
 
 - 👥 **Multi-User & Secure Access**:
-
   - Multi-User, Secure Authentication with OAuth2, LDAP, & Email Login Support
   - Built-in Moderation, and Token spend tools
 
-- ⚙️ **Configuration & Deployment**:
-
-  - Configure Proxy, Reverse Proxy, Docker, & many Deployment options
+- ⚙️ **Configuration & Deployment**:  
+  - Configure Proxy, Reverse Proxy, Docker, & many Deployment options  
+  - Use [S3 with CloudFront](https://www.librechat.ai/docs/configuration/cdn/cloudfront) for stable media links, edge delivery, signed cookies, and secured downloads
   - Use completely local or deploy on the cloud
 
-- 📖 **Open-Source & Community**:
-  - Completely Open-Source & Built in Public
+- 📖 **Open-Source & Community**:  
+  - Completely Open-Source & Built in Public  
   - Community-driven development, support, and feedback
 
 [For a thorough review of our features, see our docs here](https://docs.librechat.ai/) 📚
 
 ## 🪶 All-In-One AI Conversations with LibreChat
 
-LibreChat brings together the future of assistant AIs with the revolutionary technology of OpenAI's ChatGPT. Celebrating the original styling, LibreChat gives you the ability to integrate multiple AI models. It also integrates and enhances original client features such as conversation and message search, prompt templates and plugins.
+LibreChat is a self-hosted AI chat platform that unifies all major AI providers in a single, privacy-focused interface.
 
-With LibreChat, you no longer need to opt for ChatGPT Plus and can instead use free or pay-per-call APIs. We welcome contributions, cloning, and forking to enhance the capabilities of this advanced chatbot platform.
+Beyond chat, LibreChat provides AI Agents, Model Context Protocol (MCP) support, Artifacts, Code Interpreter, custom actions, conversation search, and enterprise-ready multi-user authentication.
 
-[![Watch the video](https://raw.githubusercontent.com/LibreChat-AI/librechat.ai/main/public/images/changelog/v0.7.6.gif)](https://www.youtube.com/watch?v=ilfwGQtJNlI)
-
-Click on the thumbnail to open the video☝️
+Open source, actively developed, and built for anyone who values control over their AI infrastructure.
 
 ---
 
 ## 🌐 Resources
 
 **GitHub Repo:**
-
-- **RAG API:** [github.com/danny-avila/rag_api](https://github.com/danny-avila/rag_api)
-- **Website:** [github.com/LibreChat-AI/librechat.ai](https://github.com/LibreChat-AI/librechat.ai)
+  - **RAG API:** [github.com/danny-avila/rag_api](https://github.com/danny-avila/rag_api)
+  - **Website:** [github.com/LibreChat-AI/librechat.ai](https://github.com/LibreChat-AI/librechat.ai)
 
 **Other:**
   - **Website:** [librechat.ai](https://librechat.ai)
@@ -180,9 +174,8 @@ Click on the thumbnail to open the video☝️
 ## 📝 Changelog
 
 Keep up with the latest updates by visiting the releases page and notes:
-
 - [Releases](https://github.com/danny-avila/LibreChat/releases)
-- [Changelog](https://www.librechat.ai/changelog)
+- [Changelog](https://www.librechat.ai/changelog) 
 
 **⚠️ Please consult the [changelog](https://www.librechat.ai/changelog) for breaking changes before updating.**
 
@@ -232,188 +225,4 @@ We thank [Locize](https://locize.com) for their translation management tools tha
   <a href="https://locize.com" target="_blank" rel="noopener noreferrer">
     <img src="https://github.com/user-attachments/assets/d6b70894-6064-475e-bb65-92a9e23e0077" alt="Locize Logo" height="50">
   </a>
-</p
-<h2>
-  OMNIVENTUS CHANGES
-</h2>
-# Business Actions Setup
-
-Business Actions enable LibreChat to display contextual action buttons above AI responses. These actions provide users with quick ways to interact with external systems based on the context of their conversation.
-
-## Configuring Business Actions
-
-Business Actions are powered by specialized providers that can be configured in LibreChat. Currently, the following providers are available:
-
-1. **Search Actions Provider** - General search-related actions
-2. **Movie Actions Provider** - Movie-related actions using The Movie Database API
-
-### Movie Actions Provider Setup
-
-The Movie Actions Provider requires an API key from The Movie Database (TMDB). Follow these steps to set up:
-
-1. Create a TMDB account at [https://www.themoviedb.org/signup](https://www.themoviedb.org/signup)
-2. Go to your account settings and navigate to the API section
-3. Create a new API key by following their process (typically requires providing basic application information)
-4. Once you have the API key, add it to your `.env` file:
-
-```
-# TMDB API key for movie-related business actions
-TMDB_API_KEY=your_api_key_here
-```
-
-5. Restart your LibreChat instance for the changes to take effect
-
-## Testing Business Actions
-
-### Movie Actions
-
-To test the Movie Actions provider, try asking the AI questions that contain movie-related terms, such as:
-
-- "Recommend a movie about space"
-- "What are some good action movies?"
-- "Find films with Tom Hanks"
-- "Suggest a movie to watch tonight"
-
-You should see contextual actions appear above the AI's response with links to relevant movies on TMDB.
-
-## Creating Custom Providers
-
-You can create your own business actions providers by:
-
-1. Creating a new file in `api/server/services/actions/` following the pattern of existing providers
-2. Implementing the required `getActions` method
-3. Registering your provider in `api/server/services/initBusinessActions.js`
-
-See the `MovieActionsProvider.js` file for a comprehensive example of implementing a provider.
-
-## Troubleshooting
-
-If business actions are not appearing:
-
-1. Check your server logs for any errors related to business actions providers
-2. Verify that your API keys are correctly set in the `.env` file
-3. Make sure your query contains terms that would trigger the relevant provider
-4. Confirm that the provider is properly registered in `initBusinessActions.js`
-
-to see live changes on the front go to http://localhost:3090/
-
-<p>
-  - you can go on [RAG_API_HOST]:8000/docs to see the docs of the RAG API
-  - add posibility to see file scope in the my files page of librechat
-  - remove possibility to remove files that are not created by the user
-  - change color of shared files
-  - add simple user administration interface for users of type admin
-  - add for admin, an interface to add shared files to the file library
-
-todo:
-
-display file scope in the file manager
-
-improvements:
-
-- put users in recoil state (not priority)
-- supprimer l'option pour ajouter des utilisateurs
-- add a button to force the update of the preloaded files
-- show token usage for each user in the admin interface but also in the main view (user/:id page)
-- bien gerer la suppression d'un utilisateur par rapport à ses fichiers
-
-there is an error when i submit request: failed to fetch models from Mistral API , the server responded with status 401 but i am using ollama.
-
-add new en var FILE_ACCESS_GROUPS
-
-- limit prompt creation to admin only
-- display prompt in chip format above the chat
-- visualy increase user balance limit
-- add granularity to some interfaces features (prompt, preset, bookmark, agent)
-  be able to deactive some features only for some roles (admin, manager, user)
-  endpointsMenu: true
-  modelSelect: true
-  parameters: true
-  sidePanel: true
-  presets: true
-  prompts: true
-  bookmarks: true
-  multiConvo: true
-  agents: true
-
-  - revalidate the prompts to get shared promps above the chat when a new prompt is created.
-
-  - use authentication from another source (sql external database)
-  - add ability to have files in the prompt
-
-generate a diagram of the project structure
-mmdc -i archi.md -o output.pdf
-
-read the MessageRender.tsx file and it's related component to understand the behavior and flow of the message rendering in the librechat project.
-the goal is to find a way to display in the returned message section of a conversation a list of clickable elements (action button, links ) all displayed in a consistant simple card maner.
-
-we want to be able for some queries of the user, to display above the streamed response of the AI, some links, buttons that can redirect the user to business related location. the data in that section will come from another call to the backend that will be directly handled by non AI processes. let's call that additionnal data "contextual business actions data"
-
-think , review analyse the project structure and suggest the best way to save the contextual business actions data , and the best way to display it .
-break it down step by step (think about how to orchestrate the simulatneous fetch, how to save the data , both front end and backend , and how to do the display
-
-hubspot , sap , brevo or external api integration for business actions data.
-
-create a template email for a campaign to send to a list of contacts.
-create a gif demo of the usage of a key recurent feature
-
-## understand the streaming flow.
-
-The Complete Streaming Flow
-AskController calls client.sendMessage() with an onProgress callback
-The client connects to the AI API with streaming enabled
-As each token arrives from the AI:
-The client calls the onProgress callback with the token
-onProgress (created by createOnProgress) calls the utility sendMessage function
-The utility sendMessage formats and writes an SSE event to the response
-The frontend receives these events in real-time and updates the UI
-When the AI finishes generating:
-The client's sendMessage returns the complete response
-AskController sends a final SSE event with sendMessage(res, {..., final: true})
-AskController calls res.end() to close the connection
-This architecture allows LibreChat to stream tokens as they're generated, providing a real-time experience to users.
-
-## Agent Ideas and Use Cases
-
-### Sales Inquiry Agent
-
-Use Case: This agent can handle sales inquiries by providing information on products, checking stock availability, and engaging potential customers. It can also collect customer information for follow-up.
-
-### Marketing Content Generator
-
-Use Case: This agent can generate marketing copies, social media posts, and email newsletters based on user inputs, saving time for marketers.
-
-### Code Review Agent
-
-Use Case: It can help developers automatically review code snippets for best practices and common issues, provide explanations, and suggest improvements.
-
-### Document Assistant Agent
-
-Use Case: This agent can search for documents based on user queries and summarize or extract key points, aiding in project management or research.
-
-### Tech Support Agent
-
-Use Case: This agent can respond to tech support requests, troubleshoot common issues, and guide users through setup processes.
-
-### Data Dashboard Agent
-
-Use Case: This agent can generate visual reports and dashboards based on ongoing project data and KPIs, assisting in decision-making processes.
-
-### Social Media Monitoring Agent
-
-Monitors social media platforms for mentions
-Helps draft responses to comments/mentions
-
-### Customer Support Agent
-
-Handles customer inquiries and complaints
-Provides solutions to common issues
-
-when creating actions, make sure to add the domain to the allowed domains in the librechat.yaml file.
-
-notion json api:
-
-## improvements
-
-- sort prompt by category so that user can find them easily
-- create more categories for prompts
+</p>

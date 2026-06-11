@@ -6,8 +6,8 @@ import { useParams } from 'react-router-dom';
 import { Constants, buildTree } from 'librechat-data-provider';
 import type { TMessage } from 'librechat-data-provider';
 import type { ChatFormValues } from '~/common';
-import { ChatContext, AddedChatContext, useFileMapContext, ChatFormProvider } from '~/Providers';
-import { useChatHelpers, useAddedResponse, useSSE } from '~/hooks';
+import { ChatContext, AddedChatContext, ChatFormProvider, useFileMapContext } from '~/Providers';
+import { useAddedResponse, useResumeOnLoad, useAdaptiveSSE, useChatHelpers } from '~/hooks';
 import ConversationStarters from './Input/ConversationStarters';
 import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
@@ -32,31 +32,38 @@ function LoadingSpinner() {
 function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
-  const addedSubmission = useRecoilValue(store.submissionByIndex(index + 1));
+  const isSubmitting = useRecoilValue(store.isSubmittingFamily(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
-
-  const fileMap = useFileMapContext();
-
-  const { data: messagesTree = null, isLoading } = useGetMessagesByConvoId(conversationId ?? '', {
-    select: useCallback(
-      (data: TMessage[]) => {
-        const dataTree = buildTree({ messages: data, fileMap });
-        return dataTree?.length === 0 ? null : (dataTree ?? null);
-      },
-      [fileMap],
-    ),
-    enabled: !!fileMap,
-  });
-
-  const chatHelpers = useChatHelpers(index, conversationId);
-  const addedChatHelpers = useAddedResponse({ rootIndex: index });
-
-  useSSE(rootSubmission, chatHelpers, false);
-  useSSE(addedSubmission, addedChatHelpers, true);
 
   const methods = useForm<ChatFormValues>({
     defaultValues: { text: '' },
   });
+
+  const fileMap = useFileMapContext();
+
+  const { data: messagesTree = null, isLoading } = useGetMessagesByConvoId(
+    conversationId ?? '',
+    {
+      select: useCallback(
+        (data: TMessage[]) => {
+          const dataTree = buildTree({ messages: data, fileMap });
+          return dataTree?.length === 0 ? null : (dataTree ?? null);
+        },
+        [fileMap],
+      ),
+      enabled: !!fileMap,
+    },
+    { isStreaming: isSubmitting },
+  );
+
+  const chatHelpers = useChatHelpers(index, conversationId);
+  const addedChatHelpers = useAddedResponse();
+
+  useAdaptiveSSE(rootSubmission, chatHelpers, false, index);
+
+  // Auto-resume if navigating back to conversation with active job
+  // Wait for messages to load before resuming to avoid race condition
+  useResumeOnLoad(conversationId, chatHelpers.getMessages, index, !isLoading);
 
   let content: JSX.Element | null | undefined;
   const isLandingPage =
@@ -79,8 +86,8 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation>
-            <div className="flex h-full w-full flex-col">
-              {!isLoading && <Header />}
+            <div className="relative flex h-full w-full flex-col">
+              <Header />
               <>
                 <div
                   className={cn(

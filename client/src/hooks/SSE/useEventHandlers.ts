@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { v4 } from 'uuid';
 import { useSetRecoilState } from 'recoil';
 import { useQueryClient } from '@tanstack/react-query';
@@ -21,19 +21,19 @@ import type {
 } from 'librechat-data-provider';
 import type { TResData, TFinalResData, ConvoGenerator } from '~/common';
 import type { InfiniteData } from '@tanstack/react-query';
-import type { TGenTitleMutation } from '~/data-provider';
-import type { SetterOrUpdater, Resetter } from 'recoil';
+import type { SetterOrUpdater } from 'recoil';
 import type { ConversationCursorData } from '~/utils';
 import {
   logger,
   setDraft,
   scrollToEnd,
   getAllContentText,
-  addConvoToAllQueries,
+  upsertConvoInAllQueries,
   updateConvoInAllQueries,
   removeConvoFromAllQueries,
   findConversationInInfinite,
 } from '~/utils';
+import { startupConfigKey, queueTitleGeneration } from '~/data-provider';
 import useAttachmentHandler from '~/hooks/SSE/useAttachmentHandler';
 import useContentHandler from '~/hooks/SSE/useContentHandler';
 import useStepHandler from '~/hooks/SSE/useStepHandler';
@@ -41,6 +41,7 @@ import { useApplyAgentTemplate } from '~/hooks/Agents';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { MESSAGE_UPDATE_INTERVAL } from '~/common';
 import { useLiveAnnouncer } from '~/Providers';
+import { shouldResetSubagentAtomsOnConversationChange } from './cleanup';
 import store from '~/store';
 
 type TSyncData = {
@@ -54,7 +55,6 @@ type TSyncData = {
 
 export type EventHandlerParams = {
   isAddedRequest?: boolean;
-  genTitle?: TGenTitleMutation;
   setCompleted: React.Dispatch<React.SetStateAction<Set<unknown>>>;
   setMessages: (messages: TMessage[]) => void;
   getMessages: () => TMessage[] | undefined;
@@ -62,7 +62,6 @@ export type EventHandlerParams = {
   setConversation?: SetterOrUpdater<TConversation | null>;
   newConversation?: ConvoGenerator;
   setShowStopButton: SetterOrUpdater<boolean>;
-  resetLatestMessage?: Resetter;
 };
 
 const createErrorMessage = ({
@@ -167,7 +166,6 @@ export const getConvoTitle = ({
 };
 
 export default function useEventHandlers({
-  genTitle,
   setMessages,
   getMessages,
   setCompleted,
@@ -176,7 +174,6 @@ export default function useEventHandlers({
   setIsSubmitting,
   newConversation,
   setShowStopButton,
-  resetLatestMessage,
 }: EventHandlerParams) {
   const queryClient = useQueryClient();
   const { announcePolite } = useLiveAnnouncer();
@@ -189,8 +186,8 @@ export default function useEventHandlers({
   const { conversationId: paramId } = useParams();
   const { token } = useAuthContext();
 
-  const contentHandler = useContentHandler({ setMessages, getMessages });
-  const { stepHandler, clearStepMaps } = useStepHandler({
+  const { contentHandler, resetContentHandler } = useContentHandler({ setMessages, getMessages });
+  const { stepHandler, clearStepMaps, resetSubagentAtoms, syncStepMessage } = useStepHandler({
     setMessages,
     getMessages,
     announcePolite,
@@ -199,16 +196,57 @@ export default function useEventHandlers({
   });
   const attachmentHandler = useAttachmentHandler(queryClient);
 
+  /** Wipe the per-subagent Recoil atoms on conversation navigation.
+   *  Historical subagent dialogs rehydrate from the persisted
+   *  `subagent_content` on each `tool_call` (written by the backend
+   *  at message-save time), so clearing live atoms on switch
+   *  doesn't lose any viewable history — it just keeps `atomFamily`
+   *  bounded across multi-conversation sessions.
+   *
+   *  Rule: reset on real conversation switches, but preserve atoms for
+   *  the single `new` → saved-id transition created by this active run.
+   *  Transitions FROM null or undefined pass through:
+   *    - initial mount on a new-chat route: nothing to clear.
+   *    - new-chat URL stamp mid-stream (`new` → savedId): the final
+   *      handler marks that saved id before navigation so the in-flight
+   *      subagent ticker/content state survives. Cancelled subagent
+   *      runs depend on this live atom because the server may not have
+   *      persisted `subagent_content` before interruption.
+   *  Cases that DO reset (previous non-null, value changed):
+   *    - id1 → id2 (switching between established chats)
+   *    - new → id (user selected an existing chat from the sidebar)
+   *    - id → null (user clicked "new chat")
+   *    - id → undefined (route teardown / navigate away) */
+  const lastConversationIdRef = useRef<string | null | undefined>(paramId);
+  const preserveSubagentAtomsForNewConvoIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const previous = lastConversationIdRef.current;
+    const preserveNewConversationId = preserveSubagentAtomsForNewConvoIdRef.current;
+    lastConversationIdRef.current = paramId;
+    preserveSubagentAtomsForNewConvoIdRef.current = null;
+    if (
+      shouldResetSubagentAtomsOnConversationChange(previous, paramId, preserveNewConversationId)
+    ) {
+      resetSubagentAtoms();
+    }
+  }, [paramId, resetSubagentAtoms]);
+
+  /** Final cleanup on component unmount. `useStepHandler` keeps the
+   *  set of known atom keys in a ref; when the hook unmounts (user
+   *  navigates away from the chat route entirely) that ref is lost,
+   *  so a subsequent remount can't clear atoms it never saw created.
+   *  Flush at the teardown boundary to keep `atomFamily` bounded
+   *  across route changes. */
+  useEffect(
+    () => () => {
+      resetSubagentAtoms();
+    },
+    [resetSubagentAtoms],
+  );
+
   const messageHandler = useCallback(
     (data: string | undefined, submission: EventSubmission) => {
-      const {
-        messages,
-        userMessage,
-        plugin,
-        plugins,
-        initialResponse,
-        isRegenerate = false,
-      } = submission;
+      const { messages, userMessage, initialResponse, isRegenerate = false } = submission;
       const text = data ?? '';
       setIsSubmitting(true);
 
@@ -224,8 +262,6 @@ export default function useEventHandlers({
           {
             ...initialResponse,
             text,
-            plugin: plugin ?? null,
-            plugins: plugins ?? [],
           },
         ]);
       } else {
@@ -235,8 +271,6 @@ export default function useEventHandlers({
           {
             ...initialResponse,
             text,
-            plugin: plugin ?? null,
-            plugins: plugins ?? [],
           },
         ]);
       }
@@ -269,13 +303,6 @@ export default function useEventHandlers({
         removeConvoFromAllQueries(queryClient, submission.conversation.conversationId as string);
       }
 
-      // refresh title
-      if (genTitle && isNewConvo && requestMessage.parentMessageId === Constants.NO_PARENT) {
-        setTimeout(() => {
-          genTitle.mutate({ conversationId: convoUpdate.conversationId as string });
-        }, 2500);
-      }
-
       if (setConversation && !isAddedRequest) {
         setConversation((prevState) => {
           const update = { ...prevState, ...convoUpdate };
@@ -285,7 +312,7 @@ export default function useEventHandlers({
 
       setIsSubmitting(false);
     },
-    [setMessages, setConversation, genTitle, isAddedRequest, queryClient, setIsSubmitting],
+    [setMessages, setConversation, isAddedRequest, queryClient, setIsSubmitting],
   );
 
   const syncHandler = useCallback(
@@ -294,14 +321,12 @@ export default function useEventHandlers({
       const { initialResponse, messages: _messages, userMessage } = submission;
       const messages = _messages.filter((msg) => msg.messageId !== userMessage.messageId);
 
-      setMessages([
-        ...messages,
-        requestMessage,
-        {
-          ...initialResponse,
-          ...responseMessage,
-        },
-      ]);
+      const nextResponseMessage = {
+        ...initialResponse,
+        ...responseMessage,
+      };
+
+      setMessages([...messages, requestMessage, nextResponseMessage]);
 
       announcePolite({
         message: 'start',
@@ -329,9 +354,9 @@ export default function useEventHandlers({
         });
 
         if (requestMessage.parentMessageId === Constants.NO_PARENT) {
-          addConvoToAllQueries(queryClient, update);
+          upsertConvoInAllQueries(queryClient, update);
         } else {
-          updateConvoInAllQueries(queryClient, update.conversationId!, (_c) => update);
+          updateConvoInAllQueries(queryClient, update.conversationId!, (_c) => update, true);
         }
       } else if (setConversation) {
         setConversation((prevState) => {
@@ -346,30 +371,30 @@ export default function useEventHandlers({
       }
 
       setShowStopButton(true);
-      if (resetLatestMessage) {
-        logger.log('latest_message', 'syncHandler: resetting latest message');
-        resetLatestMessage();
-      }
     },
-    [
-      queryClient,
-      setMessages,
-      isAddedRequest,
-      announcePolite,
-      setConversation,
-      setShowStopButton,
-      resetLatestMessage,
-    ],
+    [queryClient, setMessages, isAddedRequest, announcePolite, setConversation, setShowStopButton],
   );
 
   const createdHandler = useCallback(
     (data: TResData, submission: EventSubmission) => {
       queryClient.invalidateQueries([QueryKeys.mcpConnectionStatus]);
+      queryClient.invalidateQueries([QueryKeys.mcpTools]);
       const { messages, userMessage, isRegenerate = false, isTemporary = false } = submission;
+      /**
+       * The spread carries `manualSkills` through from
+       * `submission.initialResponse` — `useChatFunctions` seeds the field
+       * there at construction so the assistant placeholder already has it
+       * by the time this handler fires. Subsequent `useStepHandler`
+       * spreads and `updateContent` spreads preserve it, and
+       * `finalHandler`'s server-backed `responseMessage` replacement
+       * drops it, which is the right behavior: by finalize the real
+       * `skill` tool_call is in `content` and takes over rendering.
+       */
       const initialResponse = {
         ...submission.initialResponse,
         parentMessageId: userMessage.messageId,
         messageId: userMessage.messageId + '_',
+        conversationId: userMessage.conversationId ?? submission.initialResponse.conversationId,
       };
       if (isRegenerate) {
         setMessages([...messages, initialResponse]);
@@ -404,9 +429,9 @@ export default function useEventHandlers({
 
         if (!isTemporary) {
           if (parentMessageId === Constants.NO_PARENT) {
-            addConvoToAllQueries(queryClient, update);
+            upsertConvoInAllQueries(queryClient, update);
           } else {
-            updateConvoInAllQueries(queryClient, update.conversationId!, (_c) => update);
+            updateConvoInAllQueries(queryClient, update.conversationId!, (_c) => update, true);
           }
         }
       } else if (setConversation) {
@@ -425,14 +450,10 @@ export default function useEventHandlers({
           sourceId: submission.conversation?.conversationId,
           ephemeralAgent: submission.ephemeralAgent,
           specName: submission.conversation?.spec,
-          startupConfig: queryClient.getQueryData<TStartupConfig>([QueryKeys.startupConfig]),
+          startupConfig: queryClient.getQueryData<TStartupConfig>(startupConfigKey(true)),
         });
       }
 
-      if (resetLatestMessage) {
-        logger.log('latest_message', 'createdHandler: resetting latest message');
-        resetLatestMessage();
-      }
       scrollToEnd(() => setAbortScroll(false));
     },
     [
@@ -442,7 +463,6 @@ export default function useEventHandlers({
       isAddedRequest,
       announcePolite,
       setConversation,
-      resetLatestMessage,
       applyAgentTemplate,
     ],
   );
@@ -454,10 +474,26 @@ export default function useEventHandlers({
         messages,
         conversation: submissionConvo,
         isRegenerate = false,
-        isTemporary = false,
+        isTemporary: _isTemporary = false,
       } = submission;
+      const serverConversation = conversation as TConversation;
 
       try {
+        // Handle early abort - aborted during tool loading before any messages saved
+        // Don't update conversation state, just reset UI and stay on new chat
+        if ((data as Record<string, unknown>).earlyAbort) {
+          console.log(
+            '[finalHandler] Early abort detected - no messages saved, staying on new chat',
+          );
+          setShowStopButton(false);
+          setIsSubmitting(false);
+          // Navigate to new chat if not already there
+          if (location.pathname !== `/c/${Constants.NEW_CONVO}`) {
+            navigate(`/c/${Constants.NEW_CONVO}`, { replace: true });
+          }
+          return;
+        }
+
         if (responseMessage?.attachments && responseMessage.attachments.length > 0) {
           // Process each attachment through the attachmentHandler
           responseMessage.attachments.forEach((attachment) => {
@@ -486,6 +522,10 @@ export default function useEventHandlers({
         announcePolite({ message: getAllContentText(responseMessage) });
 
         const isNewConvo = conversation.conversationId !== submissionConvo.conversationId;
+
+        if (isNewConvo && conversation.conversationId) {
+          queueTitleGeneration(conversation.conversationId);
+        }
 
         const setFinalMessages = (id: string | null, _messages: TMessage[]) => {
           setMessages(_messages);
@@ -526,6 +566,23 @@ export default function useEventHandlers({
         } else if (requestMessage != null && responseMessage != null) {
           finalMessages = [...messages, requestMessage, responseMessage];
         }
+
+        /* Preserve files from current messages when server response lacks them */
+        if (finalMessages.length > 0) {
+          const currentMsgMap = new Map(
+            currentMessages
+              .filter((m) => m.files && m.files.length > 0)
+              .map((m) => [m.messageId, m.files]),
+          );
+          for (let i = 0; i < finalMessages.length; i++) {
+            const msg = finalMessages[i];
+            const preservedFiles = currentMsgMap.get(msg.messageId);
+            if (msg.files == null && preservedFiles) {
+              finalMessages[i] = { ...msg, files: preservedFiles };
+            }
+          }
+        }
+
         if (finalMessages.length > 0) {
           setFinalMessages(conversation.conversationId, finalMessages);
         } else if (
@@ -543,19 +600,6 @@ export default function useEventHandlers({
           removeConvoFromAllQueries(queryClient, submissionConvo.conversationId);
         }
 
-        /* Refresh title */
-        if (
-          genTitle &&
-          isNewConvo &&
-          !isTemporary &&
-          requestMessage &&
-          requestMessage.parentMessageId === Constants.NO_PARENT
-        ) {
-          setTimeout(() => {
-            genTitle.mutate({ conversationId: conversation.conversationId as string });
-          }, 2500);
-        }
-
         if (setConversation && isAddedRequest !== true) {
           setConversation((prevState) => {
             const update = {
@@ -565,14 +609,14 @@ export default function useEventHandlers({
             if (prevState?.model != null && prevState.model !== submissionConvo.model) {
               update.model = prevState.model;
             }
-            const cachedConvo = queryClient.getQueryData<TConversation>([
-              QueryKeys.conversation,
-              conversation.conversationId,
-            ]);
-            if (!cachedConvo) {
-              queryClient.setQueryData(
+            if (conversation.conversationId) {
+              queryClient.setQueryData<TConversation>(
                 [QueryKeys.conversation, conversation.conversationId],
-                update,
+                (cachedConvo) =>
+                  ({
+                    ...cachedConvo,
+                    ...serverConversation,
+                  }) as TConversation,
               );
             }
             return update;
@@ -584,11 +628,12 @@ export default function useEventHandlers({
               sourceId: submissionConvo.conversationId,
               ephemeralAgent: submission.ephemeralAgent,
               specName: submission.conversation?.spec,
-              startupConfig: queryClient.getQueryData<TStartupConfig>([QueryKeys.startupConfig]),
+              startupConfig: queryClient.getQueryData<TStartupConfig>(startupConfigKey(true)),
             });
           }
 
           if (location.pathname === `/c/${Constants.NEW_CONVO}`) {
+            preserveSubagentAtomsForNewConvoIdRef.current = conversation.conversationId;
             navigate(`/c/${conversation.conversationId}`, { replace: true });
           }
         }
@@ -599,7 +644,6 @@ export default function useEventHandlers({
     },
     [
       navigate,
-      genTitle,
       getMessages,
       setMessages,
       queryClient,
@@ -838,15 +882,17 @@ export default function useEventHandlers({
   );
 
   return {
-    clearStepMaps,
     stepHandler,
     syncHandler,
     finalHandler,
     errorHandler,
+    clearStepMaps,
     messageHandler,
     contentHandler,
     createdHandler,
+    syncStepMessage,
     attachmentHandler,
     abortConversation,
+    resetContentHandler,
   };
 }

@@ -1,12 +1,20 @@
-const { checkAccess, generateCheckAccess } = require('@librechat/api');
+/**
+ * NOTE: hasCapability, requireCapability, hasConfigCapability, and
+ * capabilityContextMiddleware are intentionally NOT re-exported here.
+ *
+ * capabilities.js depends on ~/models, and the middleware barrel
+ * (middleware/index.js) is frequently required by modules that are
+ * themselves loaded while the barrel is still initialising — creating
+ * a circular-require that silently returns an empty exports object.
+ *
+ * Always import capability helpers directly:
+ *   require('~/server/middleware/roles/capabilities')
+ */
 const checkAdmin = require('./admin');
-// [OMNIVENTUS] strict admin check (user administration feature);
-// checkAccess/generateCheckAccess re-exported from @librechat/api (moved upstream in v0.8.x)
+// [OMNIVENTUS] strict admin check (rejects MANAGER; user administration feature)
 const checkStrictAdmin = require('./checkStrictAdmin');
 
 module.exports = {
   checkAdmin,
   checkStrictAdmin,
-  checkAccess,
-  generateCheckAccess,
 };

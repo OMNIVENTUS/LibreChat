@@ -2,15 +2,28 @@ import { useCallback } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { QueryKeys, Constants, dataService, getEndpointField } from 'librechat-data-provider';
+import {
+  QueryKeys,
+  Constants,
+  dataService,
+  getEndpointField,
+  getDefaultParamsEndpoint,
+} from 'librechat-data-provider';
 import type {
   TEndpointsConfig,
   TStartupConfig,
   TModelsConfig,
   TConversation,
 } from 'librechat-data-provider';
-import { getDefaultEndpoint, clearMessagesCache, buildDefaultConvo, logger } from '~/utils';
+import {
+  clearModelForNonEphemeralAgent,
+  getDefaultEndpoint,
+  clearMessagesCache,
+  buildDefaultConvo,
+  logger,
+} from '~/utils';
 import { useApplyModelSpecEffects } from '~/hooks/Agents';
+import { startupConfigKey } from '~/data-provider';
 import store from '~/store';
 
 const useNavigateToConvo = (index = 0) => {
@@ -19,7 +32,6 @@ const useNavigateToConvo = (index = 0) => {
   const clearAllConversations = store.useClearConvoState();
   const applyModelSpecEffects = useApplyModelSpecEffects();
   const setSubmission = useSetRecoilState(store.submissionByIndex(index));
-  const clearAllLatestMessages = store.useClearLatestMessages(`useNavigateToConvo ${index}`);
   const { hasSetConversation, setConversation: setConvo } = store.useCreateConversationAtom(index);
 
   const setConversation = useCallback(
@@ -29,7 +41,7 @@ const useNavigateToConvo = (index = 0) => {
         return;
       }
 
-      const startupConfig = queryClient.getQueryData<TStartupConfig>([QueryKeys.startupConfig]);
+      const startupConfig = queryClient.getQueryData<TStartupConfig>(startupConfigKey(true));
       applyModelSpecEffects({
         startupConfig,
         specName: conversation?.spec,
@@ -49,7 +61,10 @@ const useNavigateToConvo = (index = 0) => {
         dataService.getConversationById(conversationId),
       );
       logger.log('conversation', 'Fetched fresh conversation data', data);
-      setConversation(data);
+
+      const convoData = { ...data };
+      clearModelForNonEphemeralAgent(convoData);
+      setConversation(convoData);
       navigate(`/c/${conversationId ?? Constants.NEW_CONVO}`, { state: { focusChat: true } });
     } catch (error) {
       console.error('Error fetching conversation data on navigation', error);
@@ -63,7 +78,6 @@ const useNavigateToConvo = (index = 0) => {
   const navigateToConvo = (
     conversation?: TConversation | null,
     options?: {
-      resetLatestMessage?: boolean;
       currentConvoId?: string;
     },
   ) => {
@@ -71,14 +85,10 @@ const useNavigateToConvo = (index = 0) => {
       logger.warn('conversation', 'Conversation not provided to `navigateToConvo`');
       return;
     }
-    const { resetLatestMessage = true, currentConvoId } = options || {};
+    const { currentConvoId } = options || {};
     logger.log('conversation', 'Navigating to conversation', conversation);
     hasSetConversation.current = true;
     setSubmission(null);
-    if (resetLatestMessage) {
-      logger.log('latest_message', 'Clearing all latest messages');
-      clearAllLatestMessages();
-    }
 
     let convo = { ...conversation };
     const endpointsConfig = queryClient.getQueryData<TEndpointsConfig>([QueryKeys.endpoints]);
@@ -97,11 +107,13 @@ const useNavigateToConvo = (index = 0) => {
 
       const models = modelsConfig?.[defaultEndpoint ?? ''] ?? [];
 
+      const defaultParamsEndpoint = getDefaultParamsEndpoint(endpointsConfig, defaultEndpoint);
       convo = buildDefaultConvo({
         models,
         conversation,
         endpoint: defaultEndpoint,
         lastConversationSetup: conversation,
+        defaultParamsEndpoint,
       });
     }
     clearAllConversations(true);

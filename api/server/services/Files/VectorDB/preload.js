@@ -4,9 +4,8 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const mime = require('mime');
 const { uploadVectors } = require('./crud');
-const { createFile } = require('~/models/File');
 const { File } = require('~/db/models');
-const { findUser, createUser } = require('~/models');
+const { createFile, findUser, createUser } = require('~/models');
 const { logger } = require('~/config');
 
 /**

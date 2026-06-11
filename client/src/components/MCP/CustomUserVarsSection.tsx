@@ -1,8 +1,12 @@
 import React, { useMemo } from 'react';
-import DOMPurify from 'dompurify';
 import { useForm, Controller } from 'react-hook-form';
 import { Input, Label, Button } from '@librechat/client';
 import { useMCPAuthValuesQuery } from '~/data-provider/Tools/queries';
+import {
+  CONFIG_HTML_INLINE_TAGS,
+  CONFIG_HTML_CLASS_ATTR,
+  createConfigHtmlSanitizer,
+} from '~/utils/configHtml';
 import { useLocalize } from '~/hooks';
 
 export interface CustomUserVarConfig {
@@ -23,56 +27,44 @@ interface AuthFieldProps {
   hasValue: boolean;
   control: any;
   errors: any;
+  autoFocus?: boolean;
 }
 
-function AuthField({ name, config, hasValue, control, errors }: AuthFieldProps) {
+function AuthField({ name, config, hasValue, control, errors, autoFocus }: AuthFieldProps) {
   const localize = useLocalize();
-
-  const sanitizer = useMemo(() => {
-    const instance = DOMPurify();
-    instance.addHook('afterSanitizeAttributes', (node) => {
-      if (node.tagName && node.tagName === 'A') {
-        node.setAttribute('target', '_blank');
-        node.setAttribute('rel', 'noopener noreferrer');
-      }
-    });
-    return instance;
-  }, []);
+  const statusText = hasValue ? localize('com_ui_set') : localize('com_ui_unset');
+  const sanitize = useMemo(
+    () =>
+      createConfigHtmlSanitizer({
+        allowedTags: CONFIG_HTML_INLINE_TAGS,
+        allowedAttr: CONFIG_HTML_CLASS_ATTR,
+      }),
+    [],
+  );
 
   const sanitizedDescription = useMemo(() => {
-    if (!config.description) {
-      return '';
-    }
-    try {
-      return sanitizer.sanitize(config.description, {
-        ALLOWED_TAGS: ['a', 'strong', 'b', 'em', 'i', 'br', 'code'],
-        ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
-        ALLOW_DATA_ATTR: false,
-        ALLOW_ARIA_ATTR: false,
-      });
-    } catch (error) {
-      console.error('Sanitization failed', error);
-      return config.description;
-    }
-  }, [config.description, sanitizer]);
+    return sanitize(config.description);
+  }, [config.description, sanitize]);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <Label htmlFor={name} className="text-sm font-medium">
-          {config.title}
+          {config.title} <span className="sr-only">({statusText})</span>
         </Label>
-        {hasValue ? (
-          <div className="flex min-w-fit items-center gap-2 whitespace-nowrap rounded-full border border-border-light px-2 py-0.5 text-xs font-medium text-text-secondary">
-            <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-            <span>{localize('com_ui_set')}</span>
-          </div>
-        ) : (
-          <div className="flex min-w-fit items-center gap-2 whitespace-nowrap rounded-full border border-border-light px-2 py-0.5 text-xs font-medium text-text-secondary">
-            <div className="h-1.5 w-1.5 rounded-full border border-border-medium" />
-            <span>{localize('com_ui_unset')}</span>
-          </div>
-        )}
+        <div aria-hidden="true">
+          {hasValue ? (
+            <div className="flex min-w-fit items-center gap-2 whitespace-nowrap rounded-full border border-border-light px-2 py-0.5 text-xs font-medium text-text-secondary">
+              <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+              <span>{localize('com_ui_set')}</span>
+            </div>
+          ) : (
+            <div className="flex min-w-fit items-center gap-2 whitespace-nowrap rounded-full border border-border-light px-2 py-0.5 text-xs font-medium text-text-secondary">
+              <div className="h-1.5 w-1.5 rounded-full border border-border-medium" />
+              <span>{localize('com_ui_unset')}</span>
+            </div>
+          )}
+        </div>
       </div>
       <Controller
         name={name}
@@ -81,7 +73,17 @@ function AuthField({ name, config, hasValue, control, errors }: AuthFieldProps) 
         render={({ field }) => (
           <Input
             id={name}
-            type="text"
+            // Prevent autofill: browser DOM mutations bypass React's synthetic
+            // onChange, silently emptying react-hook-form state on submit.
+            type="new-password"
+            autoComplete="new-password"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            /* autoFocus is generally disabled due to the fact that it can disorient users,
+             * but in this case, the required field would logically be immediately navigated to anyways, and the component's
+             * functionality emulates that of a new modal opening, where users would expect focus to be shifted to the new content */
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus={autoFocus}
             {...field}
             placeholder={
               hasValue
@@ -147,7 +149,7 @@ export default function CustomUserVarsSection({
   return (
     <div className="flex-1 space-y-4">
       <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-        {Object.entries(fields).map(([key, config]) => {
+        {Object.entries(fields).map(([key, config], index) => {
           const hasValue = authValuesData?.authValueFlags?.[key] || false;
 
           return (
@@ -158,6 +160,8 @@ export default function CustomUserVarsSection({
               hasValue={hasValue}
               control={control}
               errors={errors}
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- See AuthField autoFocus comment for more details
+              autoFocus={index === 0}
             />
           );
         })}

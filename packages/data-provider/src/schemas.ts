@@ -25,10 +25,6 @@ export enum EModelEndpoint {
   agents = 'agents',
   custom = 'custom',
   bedrock = 'bedrock',
-  /** @deprecated */
-  chatGPTBrowser = 'chatGPTBrowser',
-  /** @deprecated */
-  gptPlugins = 'gptPlugins',
 }
 
 /** Mirrors `@librechat/agents` providers */
@@ -42,6 +38,7 @@ export enum Providers {
   MISTRALAI = 'mistralai',
   MISTRAL = 'mistral',
   DEEPSEEK = 'deepseek',
+  MOONSHOT = 'moonshot',
   OPENROUTER = 'openrouter',
   XAI = 'xai',
 }
@@ -52,13 +49,16 @@ export enum Providers {
 export const documentSupportedProviders = new Set<string>([
   EModelEndpoint.anthropic,
   EModelEndpoint.openAI,
+  EModelEndpoint.bedrock,
   EModelEndpoint.custom,
-  EModelEndpoint.azureOpenAI,
+  // handled in AttachFileMenu and DragDropModal since azureOpenAI only supports documents with Use Responses API set to true
+  // EModelEndpoint.azureOpenAI,
   EModelEndpoint.google,
   Providers.VERTEXAI,
   Providers.MISTRALAI,
   Providers.MISTRAL,
   Providers.DEEPSEEK,
+  Providers.MOONSHOT,
   Providers.OPENROUTER,
   Providers.XAI,
 ]);
@@ -70,6 +70,7 @@ const openAILikeProviders = new Set<string>([
   Providers.MISTRALAI,
   Providers.MISTRAL,
   Providers.DEEPSEEK,
+  Providers.MOONSHOT,
   Providers.OPENROUTER,
   Providers.XAI,
 ]);
@@ -97,10 +98,14 @@ export enum BedrockProviders {
   Amazon = 'amazon',
   Anthropic = 'anthropic',
   Cohere = 'cohere',
+  DeepSeek = 'deepseek',
   Meta = 'meta',
   MistralAI = 'mistral',
+  Moonshot = 'moonshot',
+  MoonshotAI = 'moonshotai',
+  OpenAI = 'openai',
   StabilityAI = 'stability',
-  DeepSeek = 'deepseek',
+  ZAI = 'zai',
 }
 
 export const getModelKey = (endpoint: EModelEndpoint | string, model: string) => {
@@ -169,6 +174,44 @@ export enum ReasoningEffort {
   low = 'low',
   medium = 'medium',
   high = 'high',
+  xhigh = 'xhigh',
+}
+
+export enum AnthropicEffort {
+  unset = '',
+  low = 'low',
+  medium = 'medium',
+  high = 'high',
+  xhigh = 'xhigh',
+  max = 'max',
+}
+
+/**
+ * Controls whether the model's reasoning content is returned in responses.
+ *
+ * - `'auto'` - LibreChat decides: opt in to `'summarized'` for models that
+ *   omit by default (Opus 4.7+), leave the field off for older models.
+ * - `'summarized'` - always request a post-hoc summary of the reasoning.
+ * - `'omitted'` - always suppress reasoning content. Slightly lower latency.
+ *
+ * See https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-7#thinking-content-omitted-by-default
+ */
+export enum ThinkingDisplay {
+  auto = 'auto',
+  summarized = 'summarized',
+  omitted = 'omitted',
+}
+
+/**
+ * Wire-level values accepted by the Anthropic Messages API `thinking.display`
+ * field. Excludes the LibreChat-only `'auto'` sentinel.
+ */
+export type ThinkingDisplayWireValue = Exclude<ThinkingDisplay, ThinkingDisplay.auto>;
+
+export enum BedrockReasoningConfig {
+  low = 'low',
+  medium = 'medium',
+  high = 'high',
 }
 
 export enum ReasoningSummary {
@@ -180,6 +223,14 @@ export enum ReasoningSummary {
 
 export enum Verbosity {
   none = '',
+  low = 'low',
+  medium = 'medium',
+  high = 'high',
+}
+
+export enum ThinkingLevel {
+  unset = '',
+  minimal = 'minimal',
   low = 'low',
   medium = 'medium',
   high = 'high',
@@ -199,8 +250,11 @@ export const imageDetailValue = {
 
 export const eImageDetailSchema = z.nativeEnum(ImageDetail);
 export const eReasoningEffortSchema = z.nativeEnum(ReasoningEffort);
+export const eAnthropicEffortSchema = z.nativeEnum(AnthropicEffort);
+export const eThinkingDisplaySchema = z.nativeEnum(ThinkingDisplay);
 export const eReasoningSummarySchema = z.nativeEnum(ReasoningSummary);
 export const eVerbositySchema = z.nativeEnum(Verbosity);
+export const eThinkingLevelSchema = z.nativeEnum(ThinkingLevel);
 
 export const defaultAssistantFormValues = {
   assistant: '',
@@ -226,12 +280,10 @@ export const defaultAgentFormValues = {
   model: '',
   model_parameters: {},
   tools: [],
+  tool_options: {},
   provider: {},
-  projectIds: [],
   edges: [],
   artifacts: '',
-  /** @deprecated Use ACL permissions instead */
-  isCollaborative: false,
   recursion_limit: undefined,
   [Tools.execute_code]: false,
   [Tools.file_search]: false,
@@ -241,6 +293,16 @@ export const defaultAgentFormValues = {
     name: '',
     email: '',
   },
+  /** Optional allowlist. Only applies when `skills_enabled === true`.
+   *  Empty/undefined + enabled = full catalog; non-empty + enabled = narrow to ids. */
+  skills: undefined as string[] | undefined,
+  /** Master toggle for skill use on this agent. `true` activates skills
+   *  (full catalog unless `skills` narrows it). Anything else = inactive. */
+  skills_enabled: undefined as boolean | undefined,
+  /** `undefined` = feature disabled by default (no subagent tool injected). */
+  subagents: undefined as
+    | { enabled?: boolean; allowSelf?: boolean; agent_ids?: string[] }
+    | undefined,
 };
 
 export const ImageVisionTool: FunctionTool = {
@@ -304,15 +366,45 @@ export const openAISettings = {
   },
 };
 
+/**
+ * `65535` (not 65536) is the value valid on both Google AI Studio and Vertex AI:
+ * Vertex caps current Gemini text models at 65,535 output tokens, so defaulting to
+ * 65,536 would make otherwise-default Vertex requests fail validation.
+ */
+const GOOGLE_MAX_OUTPUT = 65535 as const;
+const GOOGLE_IMAGE_MAX_OUTPUT = 32768 as const;
+const GOOGLE_LEGACY_MAX_OUTPUT = 8192 as const;
+
+/**
+ * Resolves the documented max output-token limit for a Google/Gemini model.
+ * Current Gemini text models (2.5 and 3+) support 64K output tokens; their image
+ * variants (e.g. `gemini-2.5-flash-image`) cap at 32K; legacy/deprecated models
+ * (2.0 and earlier, including legacy image models) and Gemma retain the 8K limit.
+ */
+const getGoogleMaxOutputTokens = (modelName: string): number => {
+  if (/gemini-(?:2\.5|[3-9]|\d{2,})/i.test(modelName)) {
+    if (/image/i.test(modelName)) {
+      return GOOGLE_IMAGE_MAX_OUTPUT;
+    }
+    return GOOGLE_MAX_OUTPUT;
+  }
+  return GOOGLE_LEGACY_MAX_OUTPUT;
+};
+
 export const googleSettings = {
   model: {
     default: 'gemini-1.5-flash-latest' as const,
   },
   maxOutputTokens: {
     min: 1 as const,
-    max: 64000 as const,
+    max: GOOGLE_MAX_OUTPUT,
     step: 1 as const,
-    default: 8192 as const,
+    default: GOOGLE_LEGACY_MAX_OUTPUT,
+    reset: (modelName: string): number => getGoogleMaxOutputTokens(modelName),
+    set: (value: number, modelName: string): number => {
+      const max = getGoogleMaxOutputTokens(modelName);
+      return value > max ? max : value;
+    },
   },
   temperature: {
     min: 0 as const,
@@ -343,6 +435,9 @@ export const googleSettings = {
      * the budget based on the complexity of the request.
      */
     default: -1 as const,
+  },
+  thinkingLevel: {
+    default: ThinkingLevel.unset as const,
   },
 };
 
@@ -379,6 +474,10 @@ export const anthropicSettings = {
     step: 1 as const,
     default: DEFAULT_MAX_OUTPUT,
     reset: (modelName: string) => {
+      if (/claude-opus[-.]?(?:4[-.]?(?:[6-9]|\d{2,})|[5-9]|\d{2,})/.test(modelName)) {
+        return ANTHROPIC_MAX_OUTPUT;
+      }
+
       if (/claude-(?:sonnet|haiku)[-.]?[4-9]/.test(modelName)) {
         return CLAUDE_4_64K_MAX_OUTPUT;
       }
@@ -394,6 +493,13 @@ export const anthropicSettings = {
       return DEFAULT_MAX_OUTPUT;
     },
     set: (value: number, modelName: string) => {
+      if (/claude-opus[-.]?(?:4[-.]?(?:[6-9]|\d{2,})|[5-9]|\d{2,})/.test(modelName)) {
+        if (value > ANTHROPIC_MAX_OUTPUT) {
+          return ANTHROPIC_MAX_OUTPUT;
+        }
+        return value;
+      }
+
       if (/claude-(?:sonnet|haiku)[-.]?[4-9]/.test(modelName) && value > CLAUDE_4_64K_MAX_OUTPUT) {
         return CLAUDE_4_64K_MAX_OUTPUT;
       }
@@ -441,6 +547,21 @@ export const anthropicSettings = {
       step: 1 as const,
       default: LEGACY_ANTHROPIC_MAX_OUTPUT,
     },
+  },
+  effort: {
+    default: AnthropicEffort.unset,
+    options: [
+      AnthropicEffort.unset,
+      AnthropicEffort.low,
+      AnthropicEffort.medium,
+      AnthropicEffort.high,
+      AnthropicEffort.xhigh,
+      AnthropicEffort.max,
+    ],
+  },
+  thinkingDisplay: {
+    default: ThinkingDisplay.auto,
+    options: [ThinkingDisplay.auto, ThinkingDisplay.summarized, ThinkingDisplay.omitted],
   },
   web_search: {
     default: false as const,
@@ -507,6 +628,7 @@ export const tPluginAuthConfigSchema = z.object({
   authField: z.string(),
   label: z.string(),
   description: z.string(),
+  optional: z.boolean().optional(),
 });
 
 export type TPluginAuthConfig = z.infer<typeof tPluginAuthConfigSchema>;
@@ -529,16 +651,6 @@ export type TInput = {
   inputStr: string;
 };
 
-export type TResPlugin = {
-  plugin: string;
-  input: string;
-  thought: string;
-  loading?: boolean;
-  outputs?: string;
-  latest?: string;
-  inputs?: TInput[];
-};
-
 export const tExampleSchema = z.object({
   input: z.object({
     content: z.string(),
@@ -549,39 +661,6 @@ export const tExampleSchema = z.object({
 });
 
 export type TExample = z.infer<typeof tExampleSchema>;
-
-export enum EAgent {
-  functions = 'functions',
-  classic = 'classic',
-}
-
-export const agentOptionSettings = {
-  model: {
-    default: 'gpt-4o-mini',
-  },
-  temperature: {
-    min: 0,
-    max: 1,
-    step: 0.01,
-    default: 0,
-  },
-  agent: {
-    default: EAgent.functions,
-    options: [EAgent.functions, EAgent.classic],
-  },
-  skipCompletion: {
-    default: true,
-  },
-};
-
-export const eAgentOptionsSchema = z.nativeEnum(EAgent);
-
-export const tAgentOptionsSchema = z.object({
-  agent: z.string().default(EAgent.functions),
-  skipCompletion: z.boolean().default(agentOptionSettings.skipCompletion.default),
-  model: z.string(),
-  temperature: z.number().default(agentOptionSettings.temperature.default),
-});
 
 export const tMessageSchema = z.object({
   messageId: z.string(),
@@ -599,6 +678,8 @@ export const tMessageSchema = z.object({
   /** @deprecated */
   generation: z.string().nullable().optional(),
   isCreatedByUser: z.boolean(),
+  isTemporary: z.boolean().optional(),
+  expiredAt: z.string().nullable().optional(),
   error: z.boolean().optional(),
   clientTimestamp: z.string().optional(),
   createdAt: z
@@ -630,6 +711,39 @@ export const tMessageSchema = z.object({
   feedback: feedbackSchema.optional(),
   /** metadata */
   metadata: z.record(z.unknown()).optional(),
+  contextMeta: z
+    .object({
+      calibrationRatio: z
+        .number()
+        .optional()
+        .describe(
+          'EMA ratio of provider-reported vs local token estimates; seeds the pruner on subsequent runs',
+        ),
+      encoding: z
+        .string()
+        .optional()
+        .describe(
+          'Tokenizer encoding used when this ratio was computed (e.g. "claude", "o200k_base")',
+        ),
+    })
+    .optional(),
+  /**
+   * Skill names the user invoked manually via the `$` popover on this turn.
+   * Purely UI metadata — `SkillPills` renders these above the message
+   * bubble so users can see which skills they asked for in history and on
+   * reload. Runtime resolution uses the top-level payload field with the
+   * same name. Empty / absent for model-invoked skills (shown as tool_call
+   * content parts on the assistant message instead).
+   */
+  manualSkills: z.array(z.string()).optional(),
+  /**
+   * Skill names auto-primed on this turn because their `always-apply`
+   * frontmatter flag is set. Persisted at turn time so the pinned-variant
+   * pills on the user bubble survive reload and stay stable across later
+   * edits to the skill's `alwaysApply` flag (the user bubble reflects
+   * what actually ran, not the current catalog).
+   */
+  alwaysAppliedSkills: z.array(z.string()).optional(),
 });
 
 export type MemoryArtifact = {
@@ -640,9 +754,8 @@ export type MemoryArtifact = {
 };
 
 export type UIResource = {
-  type?: string;
-  data?: unknown;
-  uri?: string;
+  resourceId: string;
+  uri: string;
   mimeType?: string;
   text?: string;
   [key: string]: unknown;
@@ -669,8 +782,6 @@ export type TAttachment =
 
 export type TMessage = z.input<typeof tMessageSchema> & {
   children?: TMessage[];
-  plugin?: TResPlugin | null;
-  plugins?: TResPlugin[];
   content?: TMessageContentParts[];
   files?: Partial<TFile>[];
   depth?: number;
@@ -734,6 +845,7 @@ export const tConversationSchema = z.object({
   system: z.string().optional(),
   thinking: z.boolean().optional(),
   thinkingBudget: coerceNumber.optional(),
+  thinkingLevel: eThinkingLevelSchema.optional(),
   stream: z.boolean().optional(),
   /* artifacts */
   artifacts: z.string().optional(),
@@ -756,6 +868,10 @@ export const tConversationSchema = z.object({
   verbosity: eVerbositySchema.optional().nullable(),
   /* OpenAI: use Responses API */
   useResponsesApi: z.boolean().optional(),
+  /* Anthropic: Effort control */
+  effort: eAnthropicEffortSchema.optional().nullable(),
+  /* Anthropic: Thinking visibility (Opus 4.7+ opt-in) */
+  thinkingDisplay: eThinkingDisplaySchema.optional().nullable(),
   /* OpenAI Responses API / Anthropic API / Google API */
   web_search: z.boolean().optional(),
   /* disable streaming */
@@ -781,12 +897,11 @@ export const tConversationSchema = z.object({
   iconURL: z.string().nullable().optional(),
   /* temporary chat */
   expiredAt: z.string().nullable().optional(),
+  isTemporary: z.boolean().optional(),
   /* file token limits */
   fileTokenLimit: coerceNumber.optional(),
   /** @deprecated */
   resendImages: z.boolean().optional(),
-  /** @deprecated */
-  agentOptions: tAgentOptionsSchema.nullable().optional(),
   /** @deprecated Prefer `modelLabel` over `chatGptLabel` */
   chatGptLabel: z.string().nullable().optional(),
 });
@@ -880,6 +995,9 @@ export const tQueryParamsSchema = tConversationSchema
     promptCache: true,
     thinking: true,
     thinkingBudget: true,
+    thinkingLevel: true,
+    effort: true,
+    thinkingDisplay: true,
     /** @endpoints bedrock */
     region: true,
     /** @endpoints bedrock */
@@ -907,6 +1025,34 @@ export const tQueryParamsSchema = tConversationSchema
     }),
   );
 
+/** Narrowed preset schema for use in model specs — omits system/DB/deprecated fields.
+ *
+ * `greeting` and `iconURL` are admin-configurable display fields on a model spec's
+ * preset (landing greeting, preset-level icon fallback) and must be preserved.
+ * `spec` is set by the client from `modelSpec.name` via `getModelSpecPreset` and is
+ * omitted to avoid duplicate configuration surface.
+ */
+export const tModelSpecPresetSchema = tPresetSchema.omit({
+  conversationId: true,
+  presetId: true,
+  title: true,
+  defaultPreset: true,
+  order: true,
+  isArchived: true,
+  user: true,
+  messages: true,
+  tags: true,
+  file_ids: true,
+  expiredAt: true,
+  parentMessageId: true,
+  resendImages: true,
+  chatGptLabel: true,
+  presetOverride: true,
+  spec: true,
+});
+
+export type TModelSpecPreset = z.infer<typeof tModelSpecPresetSchema>;
+
 export type TPreset = z.infer<typeof tPresetSchema>;
 
 export type TSetOption = (
@@ -921,6 +1067,7 @@ export type TConversation = z.infer<typeof tConversationSchema> & {
 export const tSharedLinkSchema = z.object({
   conversationId: z.string(),
   shareId: z.string(),
+  targetMessageId: z.string().optional(),
   messages: z.array(z.string()),
   isPublic: z.boolean(),
   title: z.string(),
@@ -954,6 +1101,7 @@ export const googleBaseSchema = tConversationSchema.pick({
   topK: true,
   thinking: true,
   thinkingBudget: true,
+  thinkingLevel: true,
   web_search: true,
   fileTokenLimit: true,
   iconURL: true,
@@ -963,7 +1111,7 @@ export const googleBaseSchema = tConversationSchema.pick({
 });
 
 export const googleSchema = googleBaseSchema
-  .transform((obj: Partial<TConversation>) => removeNullishValues(obj))
+  .transform((obj: Partial<TConversation>) => removeNullishValues(obj, true))
   .catch(() => ({}));
 
 /**
@@ -985,81 +1133,13 @@ export const googleGenConfigSchema = z
       .object({
         includeThoughts: z.boolean().optional(),
         thinkingBudget: coerceNumber.optional(),
+        thinkingLevel: z.string().optional(),
       })
       .optional(),
     web_search: z.boolean().optional(),
   })
   .strip()
   .optional();
-
-const gptPluginsBaseSchema = tConversationSchema.pick({
-  model: true,
-  modelLabel: true,
-  chatGptLabel: true,
-  promptPrefix: true,
-  temperature: true,
-  artifacts: true,
-  top_p: true,
-  presence_penalty: true,
-  frequency_penalty: true,
-  tools: true,
-  agentOptions: true,
-  iconURL: true,
-  greeting: true,
-  spec: true,
-  maxContextTokens: true,
-});
-
-export const gptPluginsSchema = gptPluginsBaseSchema
-  .transform((obj) => {
-    const result = {
-      ...obj,
-      model: obj.model ?? 'gpt-3.5-turbo',
-      chatGptLabel: obj.chatGptLabel ?? obj.modelLabel ?? null,
-      promptPrefix: obj.promptPrefix ?? null,
-      temperature: obj.temperature ?? 0.8,
-      top_p: obj.top_p ?? 1,
-      presence_penalty: obj.presence_penalty ?? 0,
-      frequency_penalty: obj.frequency_penalty ?? 0,
-      tools: obj.tools ?? [],
-      agentOptions: obj.agentOptions ?? {
-        agent: EAgent.functions,
-        skipCompletion: true,
-        model: 'gpt-3.5-turbo',
-        temperature: 0,
-      },
-      iconURL: obj.iconURL ?? undefined,
-      greeting: obj.greeting ?? undefined,
-      spec: obj.spec ?? undefined,
-      maxContextTokens: obj.maxContextTokens ?? undefined,
-    };
-
-    if (obj.modelLabel != null && obj.modelLabel !== '') {
-      result.modelLabel = null;
-    }
-
-    return result;
-  })
-  .catch(() => ({
-    model: 'gpt-3.5-turbo',
-    chatGptLabel: null,
-    promptPrefix: null,
-    temperature: 0.8,
-    top_p: 1,
-    presence_penalty: 0,
-    frequency_penalty: 0,
-    tools: [],
-    agentOptions: {
-      agent: EAgent.functions,
-      skipCompletion: true,
-      model: 'gpt-3.5-turbo',
-      temperature: 0,
-    },
-    iconURL: undefined,
-    greeting: undefined,
-    spec: undefined,
-    maxContextTokens: undefined,
-  }));
 
 export function removeNullishValues<T extends Record<string, unknown>>(
   obj: T,
@@ -1214,13 +1294,18 @@ export const openAISchema = openAIBaseSchema
   .transform((obj: Partial<TConversation>) => removeNullishValues(obj, true))
   .catch(() => ({}));
 
+export const openRouterSchema = openAIBaseSchema
+  .merge(tConversationSchema.pick({ promptCache: true }))
+  .transform((obj: Partial<TConversation>) => removeNullishValues(obj, true))
+  .catch(() => ({}));
+
 export const compactGoogleSchema = googleBaseSchema
   .transform((obj) => {
     const newObj: Partial<TConversation> = { ...obj };
     if (newObj.temperature === google.temperature.default) {
       delete newObj.temperature;
     }
-    if (newObj.maxOutputTokens === google.maxOutputTokens.default) {
+    if (newObj.maxOutputTokens === google.maxOutputTokens.reset(newObj.model ?? '')) {
       delete newObj.maxOutputTokens;
     }
     if (newObj.topP === google.topP.default) {
@@ -1230,7 +1315,7 @@ export const compactGoogleSchema = googleBaseSchema
       delete newObj.topK;
     }
 
-    return removeNullishValues(newObj);
+    return removeNullishValues(newObj, true);
   })
   .catch(() => ({}));
 
@@ -1246,6 +1331,8 @@ export const anthropicBaseSchema = tConversationSchema.pick({
   promptCache: true,
   thinking: true,
   thinkingBudget: true,
+  effort: true,
+  thinkingDisplay: true,
   artifacts: true,
   iconURL: true,
   greeting: true,
@@ -1261,48 +1348,6 @@ export const anthropicSchema = anthropicBaseSchema
   .transform((obj) => removeNullishValues(obj))
   .catch(() => ({}));
 
-export const compactPluginsSchema = gptPluginsBaseSchema
-  .transform((obj) => {
-    const newObj: Partial<TConversation> = { ...obj };
-    if (newObj.modelLabel === null) {
-      delete newObj.modelLabel;
-    }
-    if (newObj.chatGptLabel === null) {
-      delete newObj.chatGptLabel;
-    }
-    if (newObj.promptPrefix === null) {
-      delete newObj.promptPrefix;
-    }
-    if (newObj.temperature === 0.8) {
-      delete newObj.temperature;
-    }
-    if (newObj.top_p === 1) {
-      delete newObj.top_p;
-    }
-    if (newObj.presence_penalty === 0) {
-      delete newObj.presence_penalty;
-    }
-    if (newObj.frequency_penalty === 0) {
-      delete newObj.frequency_penalty;
-    }
-    if (newObj.tools?.length === 0) {
-      delete newObj.tools;
-    }
-
-    if (
-      newObj.agentOptions &&
-      newObj.agentOptions.agent === EAgent.functions &&
-      newObj.agentOptions.skipCompletion === true &&
-      newObj.agentOptions.model === 'gpt-3.5-turbo' &&
-      newObj.agentOptions.temperature === 0
-    ) {
-      delete newObj.agentOptions;
-    }
-
-    return removeNullishValues(newObj);
-  })
-  .catch(() => ({}));
-
 export const tBannerSchema = z.object({
   bannerId: z.string(),
   message: z.string(),
@@ -1311,6 +1356,7 @@ export const tBannerSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   isPublic: z.boolean(),
+  persistable: z.boolean().default(false),
 });
 export type TBanner = z.infer<typeof tBannerSchema>;
 
