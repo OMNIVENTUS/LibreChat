@@ -3,7 +3,7 @@
 // user-update endpoint remains — upstream has no equivalent (used by the
 // user-admin UI for role and file_access_groups changes).
 const { User } = require('~/db/models');
-const { logger } = require('~/config');
+const { logger } = require('@librechat/data-schemas');
 const { SystemRoles } = require('librechat-data-provider');
 
 const isAdmin = (req) => {

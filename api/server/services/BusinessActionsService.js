@@ -1,5 +1,5 @@
 // api/server/services/BusinessActionsService.js
-const { logger } = require('~/config');
+const { logger } = require('@librechat/data-schemas');
 
 class BusinessActionsService {
   constructor() {

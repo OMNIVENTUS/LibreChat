@@ -63,7 +63,9 @@ describe('GET /api/roles/:roleName — isOwnRole authorization', () => {
   it('returns 403 when a custom role user requests a different custom role', async () => {
     const app = createApp({ id: 'u1', role: 'STAFF' });
 
-    const res = await request(app).get('/api/roles/MANAGER');
+    // [OMNIVENTUS] MANAGER is a reserved system role in this fork; use a
+    // genuinely custom role name to preserve the test's intent.
+    const res = await request(app).get('/api/roles/SUPPORT');
 
     expect(res.status).toBe(403);
     expect(mockGetRoleByName).not.toHaveBeenCalled();

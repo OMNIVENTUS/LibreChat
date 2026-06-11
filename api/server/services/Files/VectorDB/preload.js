@@ -6,7 +6,7 @@ const mime = require('mime');
 const { uploadVectors } = require('./crud');
 const { File } = require('~/db/models');
 const { createFile, findUser, createUser } = require('~/models');
-const { logger } = require('~/config');
+const { logger } = require('@librechat/data-schemas');
 
 /**
  * Get or create the admin user for preloading files
