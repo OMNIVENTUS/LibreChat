@@ -11,10 +11,10 @@ Monitoring sessions may read this file but never write to the repo.
 ## Current
 
 - phase: 2
-- status: in-progress        <!-- not-started | in-progress | done | blocked -->
+- status: done               <!-- not-started | in-progress | done | blocked -->
 - owner: claude-code session 2026-06-11
 - updated: 2026-06-11
-- last_commit: d21154eb3     <!-- last recovery commit sha (see log for close-out commit) -->
+- last_commit: f8ce14faa     <!-- last recovery commit sha (see log for close-out commit) -->
 - blocker: —                 <!-- required when status=blocked: what and why -->
 
 ## Phase index
@@ -22,7 +22,7 @@ Monitoring sessions may read this file but never write to the repo.
 | Phase | Mission file | Goal | Status |
 |---|---|---|---|
 | 1 | [PHASE-1-GOAL.md](PHASE-1-GOAL.md) | Commit everything + fix-forward to green, bootable v0.8.1-rc2 checkpoint | done |
-| 2 | [PHASE-2-GOAL.md](PHASE-2-GOAL.md) | Merge upstream v0.8.6 from the checkpoint, modernize features | in-progress |
+| 2 | [PHASE-2-GOAL.md](PHASE-2-GOAL.md) | Merge upstream v0.8.6 from the checkpoint, modernize features | done |
 
 ## Log
 
@@ -40,3 +40,4 @@ Monitoring sessions may read this file but never write to the repo.
 - 2026-06-11 — Notion → MCP: structured tool deleted; official @notionhq/notion-mcp-server registered as `notion` in librechat.yaml; MCP init confirmed in boot logs.
 - 2026-06-11 — builds green (build:packages + client exit 0); test:client 2286 passed; test:api 143/144 suites green — responses.spec.js fails identically on vanilla v0.8.6 (ANTHROPIC_API_KEY-gated integration suite).
 - 2026-06-11 — boot vs local Mongo: /health 200; demos: MANAGER role+grants seeded, admin API list/delete, file scope visibility, preloadFiles at startup, chips in ChatForm, business actions SSE+persisted, migration dry-runs exit 0.
+- 2026-06-11 — independent validation agent: 8/8 PASS, SAFE TO FAST-FORWARD. custom-main fast-forwarded e0dbd2232..f8ce14faa; tag fork-v0.8.6. phase 2 DONE.
