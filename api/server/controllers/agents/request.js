@@ -10,6 +10,8 @@ const {
   checkAndIncrementPendingRequest,
 } = require('@librechat/api');
 const { disposeClient, clientRegistry, requestDataMap } = require('~/server/cleanup');
+// [OMNIVENTUS] business actions: contextual action buttons/links above AI responses
+const BusinessActionsService = require('~/server/services/BusinessActionsService');
 const { handleAbortError } = require('~/server/middleware');
 const { logViolation } = require('~/cache');
 const { saveMessage, getConvo } = require('~/models');
@@ -332,6 +334,23 @@ const ResumableAgentController = async (req, res, next, initializeClient, addTit
             context: 'api/server/controllers/agents/request.js - resumable user message',
           });
         }
+
+        // [OMNIVENTUS-START] business actions: attach contextual actions to the
+        // response message so they persist (message schema) and ride the final
+        // SSE event to the client (BusinessActionsCard).
+        try {
+          const actions = await BusinessActionsService.generateActions(
+            userMessage?.text ?? '',
+            userId,
+            { conversationId: conversation?.conversationId },
+          );
+          if (Array.isArray(actions) && actions.length > 0) {
+            response.contextualActions = actions;
+          }
+        } catch (actionsError) {
+          logger.warn('[BusinessActions] Failed to generate actions:', actionsError);
+        }
+        // [OMNIVENTUS-END]
 
         // CRITICAL: Save response message BEFORE emitting final event.
         // This prevents race conditions where the client sends a follow-up message
