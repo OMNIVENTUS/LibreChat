@@ -34,3 +34,9 @@ Monitoring sessions may read this file but never write to the repo.
 - 2026-06-11 — C: client build fixed (ui barrel shim, endpoint dedupe, MultiSelectDropDown restore) (2cd7829a0); api fixes (roles middleware, UsersController, stale bedrock mount) (a0c7420b3).
 - 2026-06-11 — phase 1 DONE. Evidence: git status clean+pushed; zero conflict markers; build:packages exit 0; npm run frontend exit 0; test:api 1636 passed exit 0; test:client 816 passed exit 0; backend boot vs local Docker mongo → /health 200; all feature-integrity greps pass; tag fork-v0.8.1-rc2.
 - 2026-06-11 — phase 2 STARTED (human review completed, tag pinned: v0.8.6 = 566e20b61). Branch merge/upstream-v0.8.6 from fork-v0.8.1-rc2 (d21154eb3).
+- 2026-06-11 — merge committed (1fe08fbf1): 39 conflicts resolved, zero markers. NOTE: v0.8.6 still builds with rollup+turbo — tsdown is a later upstream release; "tsdown" intent satisfied by adopting v0.8.6's actual toolchain.
+- 2026-06-11 — admin modernization (887cf4170): native /api/admin/users adopted (list/search/delete), MANAGER granted access:admin/read:users/manage:users via system grants, fork backend reduced to PUT /api/users/:userId.
+- 2026-06-11 — business actions completed (f50fcd33f, 7b28ace5c): contextualActions generated in agents/request.js, delivered over SSE and persisted.
+- 2026-06-11 — Notion → MCP: structured tool deleted; official @notionhq/notion-mcp-server registered as `notion` in librechat.yaml; MCP init confirmed in boot logs.
+- 2026-06-11 — builds green (build:packages + client exit 0); test:client 2286 passed; test:api 143/144 suites green — responses.spec.js fails identically on vanilla v0.8.6 (ANTHROPIC_API_KEY-gated integration suite).
+- 2026-06-11 — boot vs local Mongo: /health 200; demos: MANAGER role+grants seeded, admin API list/delete, file scope visibility, preloadFiles at startup, chips in ChatForm, business actions SSE+persisted, migration dry-runs exit 0.
