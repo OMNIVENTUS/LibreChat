@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui';
+} from '@librechat/client';
 
 import { useLocalize } from '~/hooks';
 

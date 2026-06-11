@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '~/utils/';
 import type { TPromptGroup } from 'librechat-data-provider';
 import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import { Chip } from '~/components/ui';
+import { Chip } from '~/components/ui/Chip';
 import { useHasAccess, useLocalize, useSubmitMessage } from '~/hooks';
 import useSharedPrompts from '~/hooks/Prompts/useSharedPrompts';
 import { VariableDialog } from '~/components/Prompts';

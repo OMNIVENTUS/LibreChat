@@ -13,9 +13,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  MultiSelectDropDown,
   SelectDropDown,
-} from '~/components/ui';
+} from '@librechat/client';
+import MultiSelectDropDown from '~/components/ui/MultiSelectDropDown';
 import { NotificationSeverity } from '~/common';
 import { PlusCircle, Settings2, UserCog, Shield } from 'lucide-react';
 import { DataTable } from './components/DataTable';

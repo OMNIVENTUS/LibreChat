@@ -1,7 +1,7 @@
 import { ArrowUpDown, Trash2 } from 'lucide-react';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { TUser } from 'librechat-data-provider';
-import { Button } from '~/components/ui';
+import { Button } from '@librechat/client';
 import { formatDate } from '~/utils';
 import { useLocalize } from '~/hooks';
 

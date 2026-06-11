@@ -40,9 +40,12 @@ Current divergence ledger (replaces the Phase 1 list):
 [UPDATE] client/src/components/Chat/Input/SharedPromptList.tsx — VariableDialog import moved to ~/components/Prompts
 [UPDATE] client/src/components/Chat/Input/Files/Table/Columns.tsx — preload/shared context map entries
 [UPDATE] client/src/components/SidePanel/Files/PanelFileCell.tsx — shared/public badge
-[OVERRIDE] client/src/components/ui/index.ts — compatibility barrel (re-exports @librechat/client + Chip/MultiSelectDropDown/TermsAndConditionsModal/AdminSettingsDialog)
 [UPDATE] client/src/locales/en/translation.json — 108 fork keys merged onto upstream
-[TODO] migrate remaining ~/components/ui imports to @librechat/client and delete the barrel
+[RESOLVED] client/src/components/ui/index.ts restored to pristine upstream content (zero merge surface):
+  fork importers migrated to @librechat/client (Button/Input/Dialog*/Table*/SelectDropDown in
+  UserPanel, Users/components/{Columns,DataTable}, SidePanel/Users/{PanelColumns,PanelTable});
+  fork-local components imported directly (Chip in SharedPromptList, MultiSelectDropDown in UserPanel).
+  Chip.tsx and MultiSelectDropDown.tsx remain as fork-only files in client/src/components/ui/.
 
 ### 2026-06-11 — Phase 1 recovery: fork checkpointed on upstream v0.8.1-rc2 (tag `fork-v0.8.1-rc2`)
 
