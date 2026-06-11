@@ -346,6 +346,15 @@ const ResumableAgentController = async (req, res, next, initializeClient, addTit
           );
           if (Array.isArray(actions) && actions.length > 0) {
             response.contextualActions = actions;
+            /* the response may already be saved (savedMessageIds) — upsert so
+             * the actions persist on the message document */
+            if (client.savedMessageIds && client.savedMessageIds.has(messageId)) {
+              await saveMessage(
+                reqCtx,
+                { ...response, user: userId },
+                { context: 'agents/request.js - business actions update' },
+              );
+            }
           }
         } catch (actionsError) {
           logger.warn('[BusinessActions] Failed to generate actions:', actionsError);
