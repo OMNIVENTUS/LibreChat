@@ -6,7 +6,7 @@ import { PermissionTypes, Permissions } from 'librechat-data-provider';
 import { Chip } from '~/components/ui';
 import { useHasAccess, useLocalize, useSubmitMessage } from '~/hooks';
 import useSharedPrompts from '~/hooks/Prompts/useSharedPrompts';
-import VariableDialog from '~/components/Prompts/Groups/VariableDialog';
+import { VariableDialog } from '~/components/Prompts';
 import { detectVariables } from '~/utils';
 
 /**
