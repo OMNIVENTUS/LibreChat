@@ -43,10 +43,14 @@ const buildQuery = (params: Record<string, unknown>): string => {
 export const health = () => `${BASE_URL}/health`;
 export const user = () => `${BASE_URL}/api/user`;
 
-// [OMNIVENTUS-START] user administration endpoints
+// [OMNIVENTUS-START] user administration endpoints.
+// Listing/deletion use upstream's native Admin Users API; the update endpoint
+// is fork-custom (upstream has no user-update route).
 export const users = () => `${BASE_URL}/api/users`;
 export const updateUser = (userId: string) => `${users()}/${userId}`;
-export const deleteUserById = (userId: string) => `${users()}/${userId}`;
+export const adminUsers = (limit: number, offset: number) =>
+  `${BASE_URL}/api/admin/users?limit=${limit}&offset=${offset}`;
+export const deleteUserById = (userId: string) => `${BASE_URL}/api/admin/users/${userId}`;
 // [OMNIVENTUS-END]
 
 export const balance = () => `${BASE_URL}/api/balance`;

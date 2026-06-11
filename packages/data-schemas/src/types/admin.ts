@@ -122,6 +122,8 @@ export type AdminUserListItem = {
   provider: string;
   createdAt?: string;
   updatedAt?: string;
+  /** [OMNIVENTUS] groups that determine shared-file access permissions */
+  file_access_groups?: string[];
 };
 
 /** Minimal user info returned by user search endpoints. */

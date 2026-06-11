@@ -15,7 +15,9 @@ import { parsePagination } from './pagination';
 
 const MAX_SEARCH_LENGTH = 200;
 
-const USER_LIST_FIELDS = '_id name username email avatar role provider createdAt updatedAt';
+// [OMNIVENTUS] file_access_groups included for the user-admin UI (shared-files feature)
+const USER_LIST_FIELDS =
+  '_id name username email avatar role provider createdAt updatedAt file_access_groups';
 
 export interface AdminUsersDeps {
   findUsers: (
@@ -63,6 +65,8 @@ export function createAdminUsersHandlers(deps: AdminUsersDeps) {
         provider: u.provider ?? 'local',
         createdAt: u.createdAt?.toISOString(),
         updatedAt: u.updatedAt?.toISOString(),
+        // [OMNIVENTUS] shared-files access groups for the user-admin UI
+        file_access_groups: u.file_access_groups ?? [],
       }));
 
       return res.status(200).json({ users: mapped, total, limit, offset });

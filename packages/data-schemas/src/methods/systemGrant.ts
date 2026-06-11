@@ -382,6 +382,35 @@ export function createSystemGrantMethods(mongoose: typeof import('mongoose')) {
             upsert: true,
           },
         }));
+        // [OMNIVENTUS-START] MANAGER role administers users via the native admin API:
+        // grant only the user-administration capabilities, not the full admin set.
+        const managerCapabilities = [
+          SystemCapabilities.ACCESS_ADMIN,
+          SystemCapabilities.READ_USERS,
+          SystemCapabilities.MANAGE_USERS,
+        ];
+        ops.push(
+          ...managerCapabilities.map((capability) => ({
+            updateOne: {
+              filter: {
+                principalType: PrincipalType.ROLE,
+                principalId: SystemRoles.MANAGER,
+                capability,
+                tenantId: { $exists: false },
+              },
+              update: {
+                $setOnInsert: {
+                  principalType: PrincipalType.ROLE,
+                  principalId: SystemRoles.MANAGER,
+                  capability,
+                  grantedAt: now,
+                },
+              },
+              upsert: true,
+            },
+          })),
+        );
+        // [OMNIVENTUS-END]
         await tenantSafeBulkWrite(SystemGrant, ops, { ordered: false });
         return;
       } catch (err) {

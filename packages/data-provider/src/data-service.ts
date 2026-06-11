@@ -1200,14 +1200,35 @@ export function verifyTwoFactorTemp(
   return request.post(endpoints.verifyTwoFactorTemp(), payload);
 }
 
+/**
+ * [OMNIVENTUS] Lists users via upstream's native Admin Users API, paginating
+ * until all users are fetched (the API caps a single page at 200).
+ */
 export const getUsers = async (): Promise<t.TUser[]> => {
-  return request.get(endpoints.users());
+  const limit = 200;
+  let offset = 0;
+  const users: t.TUser[] = [];
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const res = (await request.get(endpoints.adminUsers(limit, offset))) as {
+      users?: t.TUser[];
+      total?: number;
+    };
+    const page = res?.users ?? [];
+    users.push(...page);
+    offset += limit;
+    if (page.length < limit || users.length >= (res?.total ?? 0)) {
+      break;
+    }
+  }
+  return users;
 };
 
 export const updateUser = async (userId: string, data: Partial<t.TUser>): Promise<t.TUser> => {
   return request.put(endpoints.updateUser(userId), data);
 };
 
+/** [OMNIVENTUS] deletes via upstream's native Admin Users API */
 export const deleteUserById = async (userId: string): Promise<void> => {
   return request.delete(endpoints.deleteUserById(userId));
 };
